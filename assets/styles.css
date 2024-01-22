@@ -1,0 +1,32 @@
+@font-face {
+  font-family: "HackNerdFont";
+  src: url("/assets/HackNerdFont-Regular.woff2") format("woff2");
+}
+body {
+  font-family: "HackNerdFont";
+  margin: 0;
+  padding: 0;
+  background-color: #f6f6ef;
+}
+
+header {
+  padding: 10px;
+  text-align: right;
+  font-weight: bolder;
+}
+
+nav {
+  padding: 7px;
+}
+
+nav a {
+  color: #333;
+  text-decoration: none;
+  padding: 4px 8px;
+  margin: 0 5px;
+}
+
+section {
+  padding: 20px;
+}
+
