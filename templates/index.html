@@ -12,6 +12,17 @@
   </head>
 
   <body>
+    <script type="module">
+      import init_explode, { explode_letter } from "/assets/explode.js";
+      import init_pong, { pong_game } from "/assets/pong.js";
+
+      async function run() {
+        await init_explode();
+        await init_pong();
+      }
+
+      run();
+    </script>
     <nav>
       <a href="#">Home</a>
       <a href="#">New</a>
@@ -24,12 +35,7 @@
     </header>
 
     <section>
-      <h2>Welcome to Your Website!</h2>
-      <p>
-        This is the main content of your page. You can add paragraphs, images,
-        and other content here.
-      </p>
-      <p>Feel free to customize this structure based on your needs.</p>
+      <h2></h2>
     </section>
   </body>
 </html>

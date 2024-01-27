@@ -1,0 +1,12 @@
+[package]
+name = "pong"
+version = "0.1.0"
+edition = "2021"
+resolver = "2"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen = "0.2.90"
+web-sys = { version = "0.3.67", features = ["CanvasRenderingContext2d", "HtmlCanvasElement", "Window", "Document", "Performance", "KeyboardEvent"] }

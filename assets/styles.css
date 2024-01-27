@@ -7,6 +7,10 @@ body {
   margin: 0;
   padding: 0;
   background-color: #f6f6ef;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 }
 
 header {
@@ -30,3 +34,7 @@ section {
   padding: 20px;
 }
 
+canvas {
+  border: 1px solid grey;
+  border-radius: 9px;
+}
