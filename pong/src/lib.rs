@@ -304,22 +304,43 @@ impl PongGame {
         self.ball.update(new_x, new_y);
     }
 
-    fn move_paddle(&mut self, direction: Direction) {
-        match direction {
-            Direction::Up => {
-                let new_y = self.paddles.0.position.y + self.speed;
+    fn move_paddle(&mut self, direction: Direction, paddle: usize) {
+        match paddle {
+            0 => {
                 let new_x = self.paddles.0.position.x;
-                if self.constraints.y1 >= new_y {
-                    self.paddles.0.update(new_x, new_y);
+                match direction {
+                    Direction::Down => {
+                        let new_y = self.paddles.0.position.y + self.speed;
+                        if self.constraints.y2 - PADDLE_HEIGHT >= new_y {
+                            self.paddles.0.update(new_x, new_y);
+                        }
+                    }
+                    Direction::Up => {
+                        let new_y = self.paddles.0.position.y - self.speed;
+                        if self.constraints.y1 <= new_y {
+                            self.paddles.0.update(new_x, new_y);
+                        }
+                    }
                 }
             }
-            Direction::Down => {
-                let new_y = self.paddles.0.position.y - self.speed;
-                let new_x = self.paddles.0.position.x;
-                if self.constraints.y2 >= new_y {
-                    self.paddles.0.update(new_x, new_y);
+            1 => {
+                let new_x = self.paddles.1.position.x;
+                match direction {
+                    Direction::Down => {
+                        let new_y = self.paddles.1.position.y + self.speed;
+                        if self.constraints.y2 - PADDLE_HEIGHT >= new_y {
+                            self.paddles.1.update(new_x, new_y);
+                        }
+                    }
+                    Direction::Up => {
+                        let new_y = self.paddles.1.position.y - self.speed;
+                        if self.constraints.y1 <= new_y {
+                            self.paddles.1.update(new_x, new_y);
+                        }
+                    }
                 }
             }
+            _ => {}
         }
     }
 }
@@ -402,6 +423,8 @@ pub fn pong_game() -> Result<(), JsValue> {
             );
 
             game.move_ball();
+            game.move_paddle(Direction::Down, 0);
+            game.move_paddle(Direction::Up, 1);
             game.draw(&context);
             request_animation_frame(f.borrow().as_ref().unwrap());
         }));
