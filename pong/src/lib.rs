@@ -14,6 +14,11 @@ extern "C" {
     fn log(s: &str);
 }
 
+enum Direction {
+    Up,
+    Down,
+}
+
 enum Side {
     Left,
     Right,
@@ -298,6 +303,25 @@ impl PongGame {
         new_y += self.speed * self.ball_direction_y + self.ball.position.y;
         self.ball.update(new_x, new_y);
     }
+
+    fn move_paddle(&mut self, direction: Direction) {
+        match direction {
+            Direction::Up => {
+                let new_y = self.paddles.0.position.y + self.speed;
+                let new_x = self.paddles.0.position.x;
+                if self.constraints.y1 >= new_y {
+                    self.paddles.0.update(new_x, new_y);
+                }
+            }
+            Direction::Down => {
+                let new_y = self.paddles.0.position.y - self.speed;
+                let new_x = self.paddles.0.position.x;
+                if self.constraints.y2 >= new_y {
+                    self.paddles.0.update(new_x, new_y);
+                }
+            }
+        }
+    }
 }
 
 impl Draw for PongGame {
@@ -338,6 +362,7 @@ pub fn pong_game() -> Result<(), JsValue> {
         y1: 0.0,
         y2: G_HEIGHT as f64,
     };
+
     let mut game = PongGame::new(constraints);
 
     let canvas: HtmlCanvasElement = document()
@@ -352,6 +377,13 @@ pub fn pong_game() -> Result<(), JsValue> {
     body()
         .append_child(&canvas)
         .expect("Failed to append canvas");
+
+    let closure =
+        Closure::wrap(Box::new(move |event: web_sys::KeyboardEvent| {}) as Box<dyn FnMut(_)>);
+
+    body().add_event_listener_with_callback("keydown", closure.as_ref().unchecked_ref())?;
+
+    closure.forget();
 
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
