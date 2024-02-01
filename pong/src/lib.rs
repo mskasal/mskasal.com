@@ -310,13 +310,13 @@ impl PongGame {
                 let new_x = self.paddles.0.position.x;
                 match direction {
                     Direction::Down => {
-                        let new_y = self.paddles.0.position.y + self.speed;
+                        let new_y = self.paddles.0.position.y + self.speed * 5.0;
                         if self.constraints.y2 - PADDLE_HEIGHT >= new_y {
                             self.paddles.0.update(new_x, new_y);
                         }
                     }
                     Direction::Up => {
-                        let new_y = self.paddles.0.position.y - self.speed;
+                        let new_y = self.paddles.0.position.y - self.speed * 5.0;
                         if self.constraints.y1 <= new_y {
                             self.paddles.0.update(new_x, new_y);
                         }
@@ -327,13 +327,13 @@ impl PongGame {
                 let new_x = self.paddles.1.position.x;
                 match direction {
                     Direction::Down => {
-                        let new_y = self.paddles.1.position.y + self.speed;
+                        let new_y = self.paddles.1.position.y + self.speed * 5.0;
                         if self.constraints.y2 - PADDLE_HEIGHT >= new_y {
                             self.paddles.1.update(new_x, new_y);
                         }
                     }
                     Direction::Up => {
-                        let new_y = self.paddles.1.position.y - self.speed;
+                        let new_y = self.paddles.1.position.y - self.speed * 5.0;
                         if self.constraints.y1 <= new_y {
                             self.paddles.1.update(new_x, new_y);
                         }
@@ -384,7 +384,9 @@ pub fn pong_game() -> Result<(), JsValue> {
         y2: G_HEIGHT as f64,
     };
 
-    let mut game = PongGame::new(constraints);
+    let game = Rc::new(RefCell::new(PongGame::new(constraints)));
+
+    let game_keydown = Rc::clone(&game);
 
     let canvas: HtmlCanvasElement = document()
         .create_element("canvas")
@@ -399,13 +401,22 @@ pub fn pong_game() -> Result<(), JsValue> {
         .append_child(&canvas)
         .expect("Failed to append canvas");
 
-    let closure =
-        Closure::wrap(Box::new(move |event: web_sys::KeyboardEvent| {}) as Box<dyn FnMut(_)>);
+    let closure = Closure::wrap(Box::new(move |event: web_sys::KeyboardEvent| {
+        let mut game = game_keydown.borrow_mut();
+        match event.key().as_str() {
+            "ArrowUp" => game.move_paddle(Direction::Up, 1),
+            "ArrowDown" => game.move_paddle(Direction::Down, 1),
+            "j" => game.move_paddle(Direction::Up, 0),
+            "k" => game.move_paddle(Direction::Down, 0),
+            _ => (),
+        }
+    }) as Box<dyn FnMut(_)>);
 
     body().add_event_listener_with_callback("keydown", closure.as_ref().unchecked_ref())?;
 
     closure.forget();
 
+    let game_animation = Rc::clone(&game);
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
     if let Ok(context) = canvas
@@ -415,6 +426,7 @@ pub fn pong_game() -> Result<(), JsValue> {
         .dyn_into::<CanvasRenderingContext2d>()
     {
         *g.borrow_mut() = Some(Closure::new(move || {
+            let mut game = game_animation.borrow_mut();
             context.clear_rect(
                 game.constraints.x1,
                 game.constraints.y1,
@@ -423,8 +435,6 @@ pub fn pong_game() -> Result<(), JsValue> {
             );
 
             game.move_ball();
-            game.move_paddle(Direction::Down, 0);
-            game.move_paddle(Direction::Up, 1);
             game.draw(&context);
             request_animation_frame(f.borrow().as_ref().unwrap());
         }));
