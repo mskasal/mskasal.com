@@ -398,8 +398,13 @@ pub fn pong_game() -> Result<(), JsValue> {
     canvas.set_height(G_HEIGHT);
 
     body()
+        .owner_document()
+        .expect("No owner document found")
+        .get_element_by_id("pong")
+        .expect("No element found by ID 'pong'")
         .append_child(&canvas)
-        .expect("Failed to append canvas");
+        .expect("Failed to append game")
+        .set_text_content(Some("Pong suppsoe to be init in here!"));
 
     let closure = Closure::wrap(Box::new(move |event: web_sys::KeyboardEvent| {
         let mut game = game_keydown.borrow_mut();

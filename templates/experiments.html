@@ -8,29 +8,18 @@
     <link rel="stylesheet" href="/assets/styles.css" />
     <script src="/assets/htmx.min.js"></script>
 
-    <title>Pong</title>
+    <title>Experiments</title>
   </head>
 
   <body>
-    <script type="module">
-      import init_pong, { pong_game } from "/assets/pong.js";
-
-      async function run() {
-        await init_explode();
-        await init_pong();
-      }
-
-      run();
-    </script>
-
     {% include "nav.html" %}
-
     <header>
-      <h1>Home</h1>
+      <h1>Experiments</h1>
     </header>
 
     <section>
-      <h2></h2>
+      <h2>Pong</h2>
+      <button hx-get="/pong" hx-swap="outerHTML">Play!</button>
     </section>
   </body>
 </html>
