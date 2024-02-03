@@ -1,0 +1,15 @@
+<script type="module">
+  import init_ocr, { ocr } from "/assets/ocr.js";
+
+  async function run() {
+    await init_ocr();
+  }
+
+  run();
+</script>
+
+<small>Draw a character in the canvas</small>
+
+<br />
+<div class="ocr" id="ocr"></div>
+<div class="result"></div>

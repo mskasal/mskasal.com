@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
 
-    <link rel="stylesheet" href="/assets/HackNerdFont-Regular.woff2" />
     <link rel="stylesheet" href="/assets/styles.css" />
     <script src="/assets/htmx.min.js"></script>
 
@@ -12,17 +12,6 @@
   </head>
 
   <body>
-    <script type="module">
-      import init_pong, { pong_game } from "/assets/pong.js";
-
-      async function run() {
-        await init_explode();
-        await init_pong();
-      }
-
-      run();
-    </script>
-
     {% include "nav.html" %}
 
     <header>

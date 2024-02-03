@@ -1,9 +1,7 @@
 <script type="module">
-  import init_explode, { explode_letter } from "/assets/explode.js";
-  import init_pong, { pong_game } from "/assets/pong.js";
+  import init_pong from "/assets/pong.js";
 
   async function run() {
-    await init_explode();
     await init_pong();
   }
 
@@ -12,4 +10,5 @@
 
 <small>Play with 'j', 'k' and 'Up', 'Down'</small>
 
-<div id="pong"></div>
+<br />
+<div class="pong" id="pong"></div>

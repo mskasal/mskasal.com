@@ -1,7 +1,9 @@
 @font-face {
   font-family: "HackNerdFont";
   src: url("/assets/HackNerdFont-Regular.woff2") format("woff2");
+  font-display: swap;
 }
+
 body {
   font-family: "HackNerdFont";
   margin: 0;
@@ -37,4 +39,13 @@ canvas {
   border: 1px solid grey;
   border-radius: 9px;
   margin: auto;
+}
+
+.result {
+  font-size: 64px;
+}
+
+.pong,
+.ocr {
+  display: inline-block;
 }

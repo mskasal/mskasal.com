@@ -4,9 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link rel="stylesheet" href="/assets/HackNerdFont-Regular.woff2" />
     <link rel="stylesheet" href="/assets/styles.css" />
-    <script src="/assets/htmx.min.js"></script>
+    <script defer src="/assets/htmx.min.js"></script>
 
     <title>Experiments</title>
   </head>
@@ -20,6 +19,10 @@
     <section>
       <h2>Pong</h2>
       <button hx-get="/pong" hx-swap="outerHTML">Play!</button>
+    </section>
+    <section>
+      <h2>OCR</h2>
+      <button hx-get="/ocr" hx-swap="outerHTML">Try!</button>
     </section>
   </body>
 </html>

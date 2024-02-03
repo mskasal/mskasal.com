@@ -1,13 +1,13 @@
 {
-  "name": "pong",
+  "name": "ocr",
   "version": "0.1.0",
   "files": [
-    "pong_bg.wasm",
-    "pong.js",
-    "pong.d.ts"
+    "ocr_bg.wasm",
+    "ocr.js",
+    "ocr.d.ts"
   ],
-  "module": "pong.js",
-  "types": "pong.d.ts",
+  "module": "ocr.js",
+  "types": "ocr.d.ts",
   "sideEffects": [
     "./snippets/*"
   ]
