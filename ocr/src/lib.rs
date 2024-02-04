@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{any::Any, cell::RefCell, rc::Rc};
 
 use wasm_bindgen::prelude::*;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
@@ -65,37 +65,66 @@ pub fn ocr() -> Result<(), JsValue> {
         .append_child(&canvas)
         .expect("Failed to append ocr")
         .set_text_content(Some("Ocr suppose to be init in here!"));
-
-    let closure = Closure::wrap(
-        Box::new(move |event: web_sys::KeyboardEvent| log("mouse moving")) as Box<dyn FnMut(_)>,
-    );
-
-    canvas.add_event_listener_with_callback("mousedown", closure.as_ref().unchecked_ref())?;
-    canvas.add_event_listener_with_callback("mousemove", closure.as_ref().unchecked_ref())?;
-    canvas.add_event_listener_with_callback("mouseup", closure.as_ref().unchecked_ref())?;
-
-    closure.forget();
-
-    let f = Rc::new(RefCell::new(None));
-    let g = f.clone();
+    // let f = Rc::new(RefCell::new(None));
+    // let g = f.clone();
     if let Ok(context) = canvas
         .get_context("2d")
         .unwrap()
         .unwrap()
         .dyn_into::<CanvasRenderingContext2d>()
     {
-        *g.borrow_mut() = Some(Closure::new(move || {
-            context.clear_rect(
-                constraints.x1,
-                constraints.y1,
-                constraints.x2,
-                constraints.y2,
-            );
+        context.clear_rect(
+            constraints.x1,
+            constraints.y1,
+            constraints.x2,
+            constraints.y2,
+        );
 
-            request_animation_frame(f.borrow().as_ref().unwrap());
-        }));
+        let mut is_drawing: bool = false;
+        let closure =
+            Closure::wrap(Box::new(
+                move |event: web_sys::MouseEvent| match event.type_().as_str() {
+                    "mouseup" => {
+                        is_drawing = false;
+                    }
+                    "mousedown" => {
+                        is_drawing = true;
+                        context.begin_path();
+                        context.move_to(event.offset_x() as f64, event.offset_y() as f64);
+                    }
+                    "mousemove" => {
+                        if is_drawing == true {
+                            log(format!(
+                                "mouse moving x: {}, y: {}, x-os:{}, y-os:{}, type: {}",
+                                event.x().to_string(),
+                                event.y().to_string(),
+                                event.offset_x().to_string(),
+                                event.offset_y().to_string(),
+                                event.type_()
+                            )
+                            .as_str());
+                            context.line_to((event.offset_x()) as f64, (event.offset_y()) as f64);
+                            context.stroke();
+                        }
+                    }
+                    _ => {}
+                },
+            ) as Box<dyn FnMut(_)>);
 
-        request_animation_frame(g.borrow().as_ref().unwrap());
+        canvas.add_event_listener_with_callback("mousedown", closure.as_ref().unchecked_ref())?;
+        canvas.add_event_listener_with_callback("mousemove", closure.as_ref().unchecked_ref())?;
+        canvas.add_event_listener_with_callback("mouseup", closure.as_ref().unchecked_ref())?;
+
+        closure.forget();
+
+        // *g.borrow_mut() = Some(Closure::new(move || {
+        //
+        //     request_animation_frame(f.borrow().as_ref().unwrap());
+        // }));
+        //
+        // request_animation_frame(g.borrow().as_ref().unwrap());
     }
     Ok(())
 }
+
+fn draw(context: &CanvasRenderingContext2d) {}
