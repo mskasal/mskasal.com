@@ -1,5 +1,3 @@
-use std::{any::Any, cell::RefCell, rc::Rc};
-
 use wasm_bindgen::prelude::*;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 
@@ -126,5 +124,3 @@ pub fn ocr() -> Result<(), JsValue> {
     }
     Ok(())
 }
-
-fn draw(context: &CanvasRenderingContext2d) {}

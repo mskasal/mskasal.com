@@ -3,23 +3,211 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
+    <meta name="description" content="mskasal personal website" />
+    {% include "head.html" %}
 
-    <link rel="stylesheet" href="/assets/styles.css" />
-    <script src="/assets/htmx.min.js"></script>
-
-    <title>Pong</title>
+    <title>Résumé</title>
   </head>
 
   <body>
     {% include "nav.html" %}
+    <section class="personal-information">
+      <h1>Mustafa Samed Kasal</h1>
+      <small class="location">Berlin, Germany 10317</small>
+      <small class="social">
+        @mskasal
+        <a target="_blank" href="https://x.com/mskasal">X(Twitter)</a>
+        •
+        <a target="_blank" href="https://github.com/mskasal">Github</a>
+        •
+        <a target="_blank" href="https://www.linkedin.com/in/mskasal/"
+          >LinkedIn</a
+        >
+      </small>
+    </section>
 
-    <header>
-      <h1>Home</h1>
-    </header>
+    <section class="summary">
+      <p>
+        I wrote my first code in middle school and hooked by it, and now, with
+        over 10 years of professional experience, I've worked on various
+        projects and tech. I've seen trends change, learned from both failures
+        and successes, and developed leadership skills in team settings. I like
+        to make a positive impact. I enjoy tackling challenges and focus on
+        writing code that's not just functional but also easy to maintain and
+        test. I stay updated on tech through GitHub, newsletters, HackerNews,
+        and meet-ups. I'm familiar with Git, Agile, and Kanban, and I've been a
+        Scrum Master. Right now, I'm digging into Rust, exploring system
+        development, web services, CLIs, and WebAssembly (WASM). I'm keen on new
+        opportunities and committed to growing as an engineer. And yeah, beyond
+        the code, I'm a friendly and approachable person!
+      </p>
+    </section>
+
+    <section class="skills">
+      <h2>Skills</h2>
+      <article>
+        <ul class="skills-list">
+          <li>JavaScript/TypeScript - HTML5 - CSS3 <i>(Expert)</i></li>
+          <li>
+            Angular - RxJs - React - Redux - Zustand - React Native - Git
+            <i>(Expert) </i>
+          </li>
+          <li>Dart - Flutter - Rust - Axum <i>(Proficient)</i></li>
+          <li>
+            Python - PHP - MySQL - PostgreSQL - MongoDB - AWS - Kafka
+            <i>(Prior Experience)</i>
+          </li>
+          <li>Team building - Agile - Kanban - Jira - Confluence</li>
+          <li>
+            Attention to detail - Critical thinking - Communication - Leadership
+          </li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="experiences">
+      <h2>Experience</h2>
+      <article>
+        <small class="time-period">August 2020 - April 2024</small>
+        <div>
+          <b class="company-name">Grover GmbH. Berlin</b> -
+          <i class="position">Senior Software Engineer</i>
+        </div>
+        <ul class="projects">
+          <li>
+            Implemented wallet and banking features from scratch in a mobile app
+            integrated with <u>Solarisbank</u>, acquired proficiency in
+            <u>React Native</u> within the timeline, successfully meeting the
+            project deadline.
+          </li>
+          <li>
+            Collaborated in a cross-functional team focused on enhancing login,
+            registration, and onboarding experiences for both mobile and web
+            applications (<u>NextJS</u>, <u>React</u>, <u>PostgreSQL</u>,
+            <u>GraphQL</u>), fostering effective communication with design,
+            product, and risk teams to optimize the overall user experience.
+          </li>
+        </ul>
+      </article>
+      <article>
+        <small class="time-period">July 2018 - March 2020</small>
+        <div>
+          <b class="company-name">Migros Ticaret A.Ş. Istanbul</b> -
+          <i class="position">Senior/Lead Software Engineer</i>
+        </div>
+        <ul class="projects">
+          <li>
+            Modernized an outdated system for online functionality, overseeing
+            the recruitment and mentorship of two frontend engineers to
+            establish an efficient workflow and structure for a new design
+            system, facilitating the creation of a flexible e-commerce PWA web
+            app.
+          </li>
+          <li>
+            Trained and guided 10 new graduates and junior engineers in frontend
+            development, laying the foundation for them to independently
+            construct
+            <a target="_blank" href="https://migros.com.tr">migros.com.tr</a>
+            from scratch using the established structure after my departure.
+          </li>
+          <li>
+            Translated design concepts into frontend code, employing Agile
+            methodology to estimate project time and costs. Developed a highly
+            maintainable, scalable, and high-performance web app using
+            <u>Angular 7</u>, <u>Typescript</u>, <u>RxJS</u>, and <u>PWA</u>.
+            <a target="_blank" href="https://tazedirekt.com">tazedirekt.com</a>
+            -
+            <a target="_blank" href="https://macrocenter.com.tr"
+              >macrocenter.com.tr</a
+            >
+          </li>
+        </ul>
+      </article>
+
+      <article>
+        <small class="time-period">February 2017 - February 2018</small>
+        <div>
+          <b class="company-name">EFT Software(Codespace), Istanbul</b> -
+          <i class="position">Senior Frontend Developer</i>
+        </div>
+        <ul class="projects">
+          <li>
+            Enhanced and completed existing Payment Screens within the company,
+            demonstrating adaptability and collaboration in the <u>React</u>
+            environment.
+          </li>
+          <li>
+            Developed a company Dashboard and SDK from scratch, mastering React
+            and creating a UI kit, successfully meeting the project deadline
+            <a target="_blank" href="https://ozan.com">ozan.com</a>
+          </li>
+        </ul>
+      </article>
+
+      <article>
+        <small class="time-period"> February 2012 - February 2017</small>
+        <div>
+          <b class="company-name">Botego Inc, Istanbul</b> -
+          <i class="position">Software Developer</i>
+        </div>
+        <ul class="projects">
+          <li>
+            Developed the Livechat 24/7 app, an NLP-enhanced customer support
+            application, from the ground up as part of the engineering team.
+            Utilized <u>Angular</u>, <u>Socket IO</u>, and other technologies
+            for seamless integration of front-end UI components with backend
+            APIs.
+          </li>
+          <li>
+            Contributed to EU projects by actively participating in training
+            sentiment analysis engines and developing Natural Language
+            Processing components, including tokenizers and algorithms.
+          </li>
+          <li>
+            Achieved over 350k downloads for <u>Mervey’i Tavla</u> and
+            <u>Botrettin Hoca</u>
+            Android apps through integrated front-end development with backend
+            APIs, utilizing technologies like <u>Phonegap</u>,
+            <u>JavaScript</u>, <u>JQuery</u>, <u>CSS</u>, and <u>HTML</u>.
+          </li>
+        </ul>
+      </article>
+    </section>
 
     <section>
-      <h2></h2>
+      <h2>Education</h2>
+
+      <article>
+        <small class="time-period">2007 - 2023</small>
+        <div>
+          <b class="school-name">YTU Mathematical Engineering, Istanbul </b> -
+          <i class="current-status">Dropped</i>
+
+          <p>
+            I completed the majority of relevant classes in Mathematical
+            Engineering, acquiring skills in optimization, computer science, and
+            statistics, before deciding to discontinue my studies.
+          </p>
+        </div>
+      </article>
+      <article>
+        <small class="time-period">2003 - 2007</small>
+        <div>
+          <b>Ataturk University Mathematics Teacher, Eruzurm</b>
+        </div>
+      </article>
     </section>
+
+    <section>
+      <h2>Patents</h2>
+      <p>
+        Semi-automated software system for consolidating questions-and-answers
+        from customer service sessions, processing them into a keyword-oriented
+        knowledge base and database system.
+      </p>
+      <small><i>Botego - US 62/105,085 · Filed Jan 19, 2015</i></small>
+    </section>
+
+    <script defer src="/assets/htmx.min.js"></script>
   </body>
 </html>
