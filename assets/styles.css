@@ -1,14 +1,9 @@
 body {
-  font-family:'Courier New', Courier, monospace ;
+  font-family: "Courier New", Courier, monospace;
   max-width: 800px;
   background-color: #f6f6ef;
   display: flex;
   flex-direction: column;
-}
-
-header {
-  padding: 10px;
-  font-weight: bolder;
 }
 
 nav {
@@ -26,12 +21,29 @@ section {
   padding: 20px;
 }
 
+small {
+  color: #847c76;
+  letter-spacing: 1px;
+  font-weight: bolder;
+  text-transform: uppercase;
+  line-height: 2em;
+  font-size: 12px;
+}
+
 canvas {
   height: 300px;
   width: 500px;
   border: 1px solid grey;
   border-radius: 9px;
   margin: auto;
+}
+
+h2 {
+  color: #e56762;
+}
+
+a {
+  color:#2b90d7;
 }
 
 .result {
