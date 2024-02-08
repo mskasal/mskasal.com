@@ -78,7 +78,7 @@ section a:hover {
 }
 
 button {
-  font-family: "Courier New", Courier, monospace;
+  font-family: var(--system-font);
   background: var(--primary-color);
   border: none;
   width: 100px;
