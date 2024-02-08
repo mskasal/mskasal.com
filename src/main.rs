@@ -56,6 +56,6 @@ async fn main() {
         .nest_service("/assets", ServeDir::new("assets"))
         .layer(comression_layer);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:6969").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3300").await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }

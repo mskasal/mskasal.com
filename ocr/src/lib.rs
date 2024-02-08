@@ -11,6 +11,121 @@ struct Constraints {
     y2: f64,
 }
 
+struct Point(f64, f64);
+
+trait PointBuilder {
+    fn new(x: f64, y: f64) -> Self;
+}
+
+impl PointBuilder for Point {
+    fn new(x: f64, y: f64) -> Self {
+        Point(x, y)
+    }
+}
+
+struct BoundingBox {
+    max_x: f64,
+    min_x: f64,
+    max_y: f64,
+    min_y: f64,
+}
+
+trait BBBuilder {
+    fn new(x1: f64, x2: f64, y1: f64, y2: f64) -> Self;
+}
+
+impl BBBuilder for BoundingBox {
+    fn new(x1: f64, x2: f64, y1: f64, y2: f64) -> Self {
+        BoundingBox {
+            max_x: x1,
+            min_x: x2,
+            max_y: y1,
+            min_y: y2,
+        }
+    }
+}
+
+struct AspectRatio {
+    height: f64,
+    width: f64,
+    ratio: f64,
+}
+
+trait CanBox {
+    fn new(w: f64, h: f64) -> Self;
+
+    fn from_bounding_box(b: BoundingBox) -> Self;
+}
+
+impl CanBox for AspectRatio {
+    fn new(w: f64, h: f64) -> Self {
+        let ratio = w / h;
+        AspectRatio {
+            height: h,
+            width: w,
+            ratio,
+        }
+    }
+
+    fn from_bounding_box(b: BoundingBox) -> Self {
+        let height = b.max_y - b.min_y;
+        let width = b.max_x - b.min_x;
+
+        Self::new(width, height)
+    }
+}
+
+struct Character {
+    points: Vec<Point>,
+    aspect_ratio: AspectRatio,
+    bounding_box: BoundingBox,
+    label: char,
+}
+
+fn euclidean_distance(p1: &Character, p2: &Character) -> f64 {
+    let mut sum = 0.0;
+
+    for Point(x1, y1) in &p1.points {
+        let Point(x2, y2) = p2.points.iter().next().unwrap();
+        sum += ((x1 - x2).powf(2.0) + (y1 - y2).powf(2.0)).sqrt();
+    }
+    sum
+}
+
+struct KnnClassifier {
+    training_data: Vec<Character>,
+    k: usize,
+}
+
+trait Predict {
+    fn predict(&self, character: &Character) -> bool;
+}
+
+impl Predict for KnnClassifier {
+    fn predict(&self, character: &Character) -> bool {
+        let mut neighbors = Vec::new();
+
+        for training_char in &self.training_data {
+            let distance = euclidean_distance(character, training_char);
+            neighbors.push((distance, training_char.label));
+        }
+        neighbors.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+
+        let mut is_one = 0;
+        let mut not_one = 0;
+
+        for (_, label) in neighbors.iter().take(self.k) {
+            if *label == '1' {
+                is_one += 1;
+            } else {
+                not_one += 1;
+            }
+        }
+
+        is_one > not_one
+    }
+}
+
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
@@ -39,6 +154,94 @@ fn body() -> web_sys::HtmlElement {
 
 #[wasm_bindgen(start)]
 pub fn ocr() -> Result<(), JsValue> {
+    let training_data = Vec::from([
+        Character {
+            bounding_box: BoundingBox::new(0.0, 200.0, 0.0, 200.0),
+            aspect_ratio: AspectRatio::new(100.0, 100.0),
+            label: '1',
+            points: vec![
+                Point::new(10.0, 10.0),
+                Point::new(7.0, 8.0),
+                Point::new(9.0, 7.0),
+                Point::new(10.0, 12.0),
+                Point::new(10.0, 14.0),
+                Point::new(10.0, 16.0),
+                Point::new(10.0, 18.0),
+                Point::new(10.0, 20.0),
+            ],
+        },
+        Character {
+            bounding_box: BoundingBox::new(0.0, 200.0, 0.0, 200.0),
+            aspect_ratio: AspectRatio::new(100.0, 100.0),
+            label: '1',
+            points: vec![
+                Point::new(10.0, 10.0),
+                Point::new(7.0, 8.0),
+                Point::new(9.0, 7.0),
+                Point::new(10.0, 12.0),
+                Point::new(10.0, 14.0),
+                Point::new(10.0, 16.0),
+                Point::new(10.0, 18.0),
+                Point::new(10.0, 20.0),
+            ],
+        },
+        Character {
+            bounding_box: BoundingBox::new(0.0, 200.0, 0.0, 200.0),
+            aspect_ratio: AspectRatio::new(100.0, 100.0),
+            label: '2',
+            points: vec![
+                Point::new(10.0, 10.0),
+                Point::new(14.0, 8.0),
+                Point::new(16.0, 7.0),
+                Point::new(18.0, 10.0),
+                Point::new(20.0, 14.0),
+                Point::new(18.0, 16.0),
+                Point::new(16.0, 18.0),
+                Point::new(18.0, 18.0),
+                Point::new(20.0, 18.0),
+            ],
+        },
+        Character {
+            bounding_box: BoundingBox::new(0.0, 200.0, 0.0, 200.0),
+            aspect_ratio: AspectRatio::new(100.0, 100.0),
+            label: '2',
+            points: vec![
+                Point::new(10.0, 10.0),
+                Point::new(14.0, 8.0),
+                Point::new(16.0, 7.0),
+                Point::new(18.0, 10.0),
+                Point::new(20.0, 14.0),
+                Point::new(18.0, 16.0),
+                Point::new(16.0, 18.0),
+                Point::new(18.0, 18.0),
+                Point::new(20.0, 18.0),
+            ],
+        },
+    ]);
+
+    let knn = KnnClassifier {
+        k: 3,
+        training_data,
+    };
+
+    let input_data = Character {
+        bounding_box: BoundingBox::new(0.0, 200.0, 0.0, 200.0),
+        aspect_ratio: AspectRatio::new(100.0, 100.0),
+        label: '1',
+        points: vec![
+            Point::new(10.0, 10.0),
+            Point::new(10.0, 12.0),
+            Point::new(10.0, 14.0),
+            Point::new(10.0, 16.0),
+            Point::new(10.0, 18.0),
+            Point::new(10.0, 20.0),
+        ],
+    };
+
+    let res = knn.predict(&input_data);
+
+    log(&res.to_string());
+
     let constraints = Constraints {
         x1: 0.0,
         x2: G_WIDTH as f64,
