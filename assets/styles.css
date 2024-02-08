@@ -4,16 +4,18 @@
   --text-color: #333;
   --background-color: #f6f6ef;
   --accent-color: #4e4137;
+  --system-font: system-ui, "Courier New", Courier, monospace;
 }
 
 body {
-  font-family: "Courier New", Courier, monospace;
+  font-family: var(--system-font);
   max-width: 800px;
   margin: 0 auto;
   background-color: var(--background-color);
   display: flex;
   flex-direction: column;
   padding: 20px;
+  line-height: 1.4rem;
 }
 
 nav {
@@ -40,7 +42,6 @@ small {
   letter-spacing: 1px;
   font-weight: bolder;
   text-transform: uppercase;
-  line-height: 2em;
   font-size: 12px;
 }
 
@@ -54,6 +55,7 @@ canvas {
 
 h2 {
   color: var(--secondary-color);
+  font-weight: 500;
 }
 
 section a {
