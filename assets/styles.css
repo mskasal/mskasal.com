@@ -29,10 +29,6 @@ nav a {
   margin: 0 5px;
 }
 
-nav a:active {
-  font-weight: bold;
-}
-
 section {
   padding: 20px;
 }
