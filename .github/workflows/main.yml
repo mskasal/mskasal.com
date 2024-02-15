@@ -41,6 +41,6 @@ jobs:
           cd ..
       - name: Move built assets to root
         run: |
-          cp -r ./assets/* target/release/assets
+          cp -r ./assets/* ./target/release/assets
 
 
