@@ -41,7 +41,7 @@ jobs:
           cd ..
       - name: Move built assets to root
         run: |
-          mdkir ./target/release/assets
+          mkdir ./target/release/assets
           cp -r ./assets/* ./target/release/assets
 
 
