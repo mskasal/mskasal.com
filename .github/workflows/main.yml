@@ -1,0 +1,43 @@
+name: Deploy mskasal.com 
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install wasm-pack
+        run: npm install -g wasm-pack
+      - name: Build Axum server
+        run: cargo build --release
+      - name: Build WebAssembly for OCR
+        run: |
+          cd /ocr
+          wasm-pack build --release --target web
+          cp -r ./pkg/* ../assets
+      - name: Build WebAssembly for LED matrix
+        run: |
+          cd /led_matrix
+          wasm-pack build --release --target web
+          cp -r ./pkg/* ../assets
+      - name: Build WebAssembly for Pong
+        run: |
+          cd /pong
+          wasm-pack build --release --target web
+          cp -r ./pkg/* ../assets
+      - name: Move built assets to root
+        run: |
+          cp -r ../assets/* target/release/assets
+
+

@@ -18,6 +18,10 @@ pub struct PongTemplate {}
 pub struct OcrTemplate {}
 
 #[derive(Template)]
+#[template(path = "led_matrix.html")]
+pub struct LedMatrixTemplate {}
+
+#[derive(Template)]
 #[template(path = "experiments.html")]
 pub struct ExperimentsTemplate {}
 
@@ -31,6 +35,9 @@ async fn pong_handler() -> PongTemplate {
 
 async fn ocr_handler() -> OcrTemplate {
     OcrTemplate {}
+}
+async fn led_matrix_handler() -> LedMatrixTemplate {
+    LedMatrixTemplate {}
 }
 
 async fn experiments_handler() -> ExperimentsTemplate {
@@ -51,6 +58,7 @@ async fn main() {
         .route("/", get(index_handler))
         .route("/pong", get(pong_handler))
         .route("/ocr", get(ocr_handler))
+        .route("/led_matrix", get(led_matrix_handler))
         .route("/experiments", get(experiments_handler))
         .nest_service("/favicon.ico", ServeFile::new("assets/favicon.ico"))
         .nest_service("/assets", ServeDir::new("assets"))

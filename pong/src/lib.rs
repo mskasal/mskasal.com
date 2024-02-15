@@ -218,7 +218,7 @@ impl PongGame {
         };
 
         let paddle_one = Paddle::new(
-            Position::new(constraints.x1, constraints.y1 + 10.0),
+            Position::new(constraints.x1, constraints.y1),
             PADDLE_WIDTH,
             PADDLE_HEIGHT,
             Side::Left,
@@ -226,7 +226,7 @@ impl PongGame {
         let paddle_two = Paddle::new(
             Position::new(
                 constraints.x2 - PADDLE_WIDTH,
-                constraints.y2 - PADDLE_HEIGHT - 10.0,
+                constraints.y2 - PADDLE_HEIGHT,
             ),
             PADDLE_WIDTH,
             PADDLE_HEIGHT,
@@ -310,13 +310,13 @@ impl PongGame {
                 let new_x = self.paddles.0.position.x;
                 match direction {
                     Direction::Down => {
-                        let new_y = self.paddles.0.position.y + self.speed * 5.0;
+                        let new_y = self.paddles.0.position.y + 5.0 + self.speed * 5.0;
                         if self.constraints.y2 - PADDLE_HEIGHT >= new_y {
                             self.paddles.0.update(new_x, new_y);
                         }
                     }
                     Direction::Up => {
-                        let new_y = self.paddles.0.position.y - self.speed * 5.0;
+                        let new_y = self.paddles.0.position.y + 5.0 - self.speed * 5.0;
                         if self.constraints.y1 <= new_y {
                             self.paddles.0.update(new_x, new_y);
                         }
@@ -327,13 +327,13 @@ impl PongGame {
                 let new_x = self.paddles.1.position.x;
                 match direction {
                     Direction::Down => {
-                        let new_y = self.paddles.1.position.y + self.speed * 5.0;
+                        let new_y = self.paddles.1.position.y + 5.0 + self.speed * 5.0;
                         if self.constraints.y2 - PADDLE_HEIGHT >= new_y {
                             self.paddles.1.update(new_x, new_y);
                         }
                     }
                     Direction::Up => {
-                        let new_y = self.paddles.1.position.y - self.speed * 5.0;
+                        let new_y = self.paddles.1.position.y + 5.0 - self.speed * 5.0;
                         if self.constraints.y1 <= new_y {
                             self.paddles.1.update(new_x, new_y);
                         }

@@ -1,2 +1,72 @@
-<link rel="stylesheet" href="/assets/styles.css" />
+<style type="text/css">
+  :root {
+    --primary-color: #2b90d7;
+    --secondary-color: #e56762;
+    --text-color: #333;
+    --background-color: #f6f6ef;
+    --accent-color: #4e4137;
+    --system-font: system-ui, "Courier New", Courier, monospace;
+  }
+
+  body {
+    font-family: var(--system-font);
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: var(--background-color);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    line-height: 1.4rem;
+  }
+
+  nav {
+    padding: 7px;
+  }
+
+  nav a {
+    color: var(--text-color);
+    text-decoration: none;
+    padding: 4px 8px;
+    margin: 0 5px;
+  }
+
+  section {
+    padding: 20px;
+  }
+
+  small {
+    color: var(--accent-color);
+    letter-spacing: 1px;
+    font-weight: bolder;
+    text-transform: uppercase;
+    font-size: 12px;
+  }
+
+  h2 {
+    color: var(--secondary-color);
+    font-weight: 500;
+  }
+
+  section a {
+    color: var(--primary-color);
+    background-image: linear-gradient(
+      90deg,
+      var(--secondary-color),
+      var(--primary-color)
+    );
+    background-size: 0% 2px;
+    background-repeat: no-repeat;
+    background-position: left bottom;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-size 250ms ease;
+  }
+</style>
+<link
+  rel="preload"
+  href="/assets/styles.css"
+  as="style"
+  onload="this.onload=null;this.rel='stylesheet'"
+/>
+<noscript><link rel="stylesheet" href="/assets/styles.css" /></noscript>
 <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />

@@ -1,4 +1,4 @@
-workspace = { members = ["explode", "ocr", "pong"] }
+workspace = { members = ["explode", "led_matrix", "ocr", "pong"] }
 [package]
 name = "mskasal"
 version = "0.1.0"
