@@ -23,19 +23,22 @@ jobs:
         run: cargo build --release
       - name: Build WebAssembly for OCR
         run: |
-          cd /ocr
+          cd ./ocr
           wasm-pack build --release --target web
           cp -r ./pkg/* ../assets
+          cd ..
       - name: Build WebAssembly for LED matrix
         run: |
-          cd /led_matrix
+          cd ./led_matrix
           wasm-pack build --release --target web
           cp -r ./pkg/* ../assets
+          cd ..
       - name: Build WebAssembly for Pong
         run: |
-          cd /pong
+          cd ./pong
           wasm-pack build --release --target web
           cp -r ./pkg/* ../assets
+          cd ..
       - name: Move built assets to root
         run: |
           cp -r ../assets/* target/release/assets
