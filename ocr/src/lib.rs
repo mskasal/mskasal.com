@@ -287,6 +287,7 @@ pub fn ocr() -> Result<(), JsValue> {
                 move |event: web_sys::MouseEvent| match event.type_().as_str() {
                     "mouseup" => {
                         is_drawing = false;
+                        context.close_path();
                     }
                     "mousedown" => {
                         is_drawing = true;
@@ -295,15 +296,6 @@ pub fn ocr() -> Result<(), JsValue> {
                     }
                     "mousemove" => {
                         if is_drawing == true {
-                            log(format!(
-                                "mouse moving x: {}, y: {}, x-os:{}, y-os:{}, type: {}",
-                                event.x().to_string(),
-                                event.y().to_string(),
-                                event.offset_x().to_string(),
-                                event.offset_y().to_string(),
-                                event.type_()
-                            )
-                            .as_str());
                             context.line_to((event.offset_x()) as f64, (event.offset_y()) as f64);
                             context.stroke();
                         }
