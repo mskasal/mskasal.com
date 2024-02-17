@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  mskasal:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app  # Mount current directory for easy code updates
+    environment:
+      - RUST_TARGET=wasm32-unknown-unknown  # Optional customization
+      - WASM_PACK_TARGET=web  # Optional customization
+    restart: unless-stopped  # Restart automatically on failures
+
