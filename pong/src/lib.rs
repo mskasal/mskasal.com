@@ -1,6 +1,8 @@
 use std::{cell::RefCell, f64::consts::PI, rc::Rc};
 use wasm_bindgen::prelude::*;
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
+use web_sys::{
+    CanvasRenderingContext2d, ErrorEvent, HtmlCanvasElement, KeyboardEvent, MessageEvent, WebSocket,
+};
 
 const G_WIDTH: u32 = 500;
 const G_HEIGHT: u32 = 300;
@@ -263,7 +265,7 @@ impl PongGame {
             scores: (score_1, score_2),
             paddles: (paddle_one, paddle_two),
             players: (player_one, player_two),
-            speed: 3.0,
+            speed: 2.5,
             constraints,
             ball_direction_x: 1.0,
             ball_direction_y: 1.0,
@@ -375,8 +377,39 @@ fn body() -> web_sys::HtmlElement {
     document().body().expect("document should have a body")
 }
 
+fn on_message(event: MessageEvent) {
+    if let Ok(text) = event.data().dyn_into::<web_sys::js_sys::JsString>() {
+        let message = text.as_string().unwrap();
+        log(format!("Received: {}", message).as_str());
+    }
+}
+
+fn on_error(event: ErrorEvent) {
+    log(format!("WebSocket error: {:?}", event).as_str());
+}
+
+fn on_open() {
+    log(format!("WebSocket connected").as_str());
+}
+
+fn on_close() {
+    log(format!("WebSocket disconnected").as_str());
+}
+
 #[wasm_bindgen(start)]
 pub fn pong_game() -> Result<(), JsValue> {
+    // let on_message_callback = Closure::wrap(Box::new(on_message) as Box<dyn FnMut(MessageEvent)>);
+    // socket.set_onmessage(Some(on_message_callback.as_ref().unchecked_ref()));
+    //
+    // let on_error_callback = Closure::wrap(Box::new(on_error) as Box<dyn FnMut(ErrorEvent)>);
+    // socket.set_onerror(Some(on_error_callback.as_ref().unchecked_ref()));
+    //
+    // let on_open_callback = Closure::wrap(Box::new(on_open) as Box<dyn FnMut()>);
+    // socket.set_onopen(Some(on_open_callback.as_ref().unchecked_ref()));
+    //
+    // let on_close_callback = Closure::wrap(Box::new(on_close) as Box<dyn FnMut()>);
+    // socket.set_onclose(Some(on_close_callback.as_ref().unchecked_ref()));
+
     let constraints = Constraints {
         x1: 0.0,
         x2: G_WIDTH as f64,
@@ -385,8 +418,11 @@ pub fn pong_game() -> Result<(), JsValue> {
     };
 
     let game = Rc::new(RefCell::new(PongGame::new(constraints)));
+    let socket = Rc::new(RefCell::new(WebSocket::new("ws://0.0.0.0:8080/ws")?));
 
     let game_keydown = Rc::clone(&game);
+    let game_socket = Rc::clone(&game);
+    let socket_key_control = Rc::clone(&socket);
 
     let canvas: HtmlCanvasElement = document()
         .create_element("canvas")
@@ -417,8 +453,37 @@ pub fn pong_game() -> Result<(), JsValue> {
         }
     }) as Box<dyn FnMut(_)>);
 
-    body().add_event_listener_with_callback("keydown", closure.as_ref().unchecked_ref())?;
+    let paddle_socket_callback = Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
+        log("paddle_socket_callback");
+        let socket = socket_key_control.borrow_mut();
+        if let Err(err) = socket.send_with_str(event.key().as_str()) {
+            println!("Failed to send message: {:?}", err);
+        }
+    });
 
+    body().add_event_listener_with_callback(
+        "keydown",
+        paddle_socket_callback.as_ref().unchecked_ref(),
+    )?;
+
+    let onmessage_callback = Closure::<dyn FnMut(_)>::new(move |e: MessageEvent| {
+        log(&e.data().as_string().unwrap());
+        let message = &e.data().as_string().unwrap();
+        let mut game = game_socket.borrow_mut();
+        match message.as_str() {
+            "ArrowUp" => game.move_paddle(Direction::Up, 1),
+            "ArrowDown" => game.move_paddle(Direction::Down, 1),
+            "j" => game.move_paddle(Direction::Up, 0),
+            "k" => game.move_paddle(Direction::Down, 0),
+            _ => (),
+        }
+    });
+
+    let socket_messages = socket.borrow_mut();
+    socket_messages.set_onmessage(Some(onmessage_callback.as_ref().unchecked_ref()));
+
+    onmessage_callback.forget();
+    paddle_socket_callback.forget();
     closure.forget();
 
     let game_animation = Rc::clone(&game);
@@ -432,6 +497,7 @@ pub fn pong_game() -> Result<(), JsValue> {
     {
         *g.borrow_mut() = Some(Closure::new(move || {
             let mut game = game_animation.borrow_mut();
+
             context.clear_rect(
                 game.constraints.x1,
                 game.constraints.y1,
@@ -446,5 +512,6 @@ pub fn pong_game() -> Result<(), JsValue> {
 
         request_animation_frame(g.borrow().as_ref().unwrap());
     }
+
     Ok(())
 }

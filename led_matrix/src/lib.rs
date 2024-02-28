@@ -69,13 +69,7 @@ impl Area for Pixel {
     }
 }
 
-trait PixelTrait {
-    fn new(position: Position, color: Color, size: f64) -> Self;
-
-    fn set_color(&mut self, new_color: Color);
-}
-
-impl PixelTrait for Pixel {
+impl Pixel {
     fn new(position: Position, color: Color, size: f64) -> Self {
         Self {
             position,
@@ -84,7 +78,7 @@ impl PixelTrait for Pixel {
         }
     }
 
-    fn set_color(&mut self, new_color: Color) {
+    fn _set_color(&mut self, new_color: Color) {
         self.color = new_color;
     }
 }
