@@ -861,7 +861,6 @@ dependencies = [
  "askama_axum",
  "axum",
  "axum-extra",
- "explode",
  "serde",
  "serde_json",
  "tokio",

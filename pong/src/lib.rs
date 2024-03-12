@@ -265,7 +265,7 @@ impl PongGame {
             scores: (score_1, score_2),
             paddles: (paddle_one, paddle_two),
             players: (player_one, player_two),
-            speed: 2.5,
+            speed: 6.0,
             constraints,
             ball_direction_x: 1.0,
             ball_direction_y: 1.0,
