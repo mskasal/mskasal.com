@@ -2,12 +2,13 @@ use std::net::SocketAddr;
 
 use askama::Template;
 use axum::{
-    extract::{ws::WebSocket, ConnectInfo, Path, State, WebSocketUpgrade},
+    extract::{ws::WebSocket, ConnectInfo, Path, Query, State, WebSocketUpgrade},
     response::IntoResponse,
-    routing::get,
+    routing::{get, post},
     Router,
 };
 use axum_extra::{headers, TypedHeader};
+use serde::Deserialize;
 use tower_http::{
     compression::{CompressionLayer, DefaultPredicate},
     services::{ServeDir, ServeFile},
@@ -17,7 +18,6 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[derive(Clone)]
 struct AppState {
-    matrix: Vec<Vec<u8>>,
     size: u32,
 }
 
@@ -41,7 +41,6 @@ pub struct LedMatrixTemplate {}
 #[template(path = "dyn_matrix.html")]
 pub struct DynMatrixTemplate {
     size: u32,
-    matrix: Vec<Vec<u8>>,
 }
 
 #[derive(Template)]
@@ -52,10 +51,9 @@ pub struct DynItemTemplate {
 }
 
 #[derive(Template)]
-#[template(path = "dyn_item_idle.html")]
-pub struct DynItemIdleTemplate {
-    i: u32,
-    j: u32,
+#[template(path = "grid.html")]
+pub struct GridTemplate {
+    size: u32,
 }
 
 #[derive(Template)]
@@ -79,18 +77,24 @@ async fn led_matrix_handler() -> LedMatrixTemplate {
 }
 
 async fn dyn_matrix_handler(State(state): State<AppState>) -> DynMatrixTemplate {
-    DynMatrixTemplate {
-        size: state.size,
-        matrix: state.matrix,
-    }
+    DynMatrixTemplate { size: state.size }
 }
 
-async fn matrix_state_handler(Path((i, j)): Path<(u32, u32)>) -> impl IntoResponse {
+async fn matrix_state_handler(Path((i, j)): Path<(u32, u32)>) -> DynItemTemplate {
     DynItemTemplate { i, j }
 }
 
-async fn matrix_state_idle_handler(Path((i, j)): Path<(u32, u32)>) -> impl IntoResponse {
-    DynItemTemplate { i, j }
+#[derive(Deserialize)]
+struct SizeQuery {
+    size: u32,
+}
+
+async fn matrix_size_handler(
+    State(mut state): State<AppState>,
+    new_size: Query<SizeQuery>,
+) -> GridTemplate {
+    state.size = new_size.size;
+    GridTemplate { size: state.size }
 }
 
 async fn experiments_handler() -> ExperimentsTemplate {
@@ -128,10 +132,7 @@ async fn ws_handler(
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() {
-    let state = AppState {
-        matrix: vec![vec![0; 40]; 40],
-        size: 40,
-    };
+    let state = AppState { size: 40 };
     let comression_layer: CompressionLayer = CompressionLayer::new()
         .br(true)
         .gzip(true)
@@ -152,7 +153,7 @@ async fn main() {
         .route("/ocr", get(ocr_handler))
         .route("/led_matrix", get(led_matrix_handler))
         .route("/dyn_matrix", get(dyn_matrix_handler))
-        .route("/matrix/idle/:i/:j", get(matrix_state_idle_handler))
+        .route("/matrix/size", get(matrix_size_handler))
         .route("/matrix/:i/:j", get(matrix_state_handler))
         .route("/experiments", get(experiments_handler))
         .route("/ws", get(ws_handler))

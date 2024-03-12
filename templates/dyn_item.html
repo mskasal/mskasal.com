@@ -1,7 +1,8 @@
 <span
   id="{{i}}-{{j}}"
-  hx-get="/matrix/idle/{{i}}/{{j}}"
-  hx-trigger="mouseleave once"
+  hx-get="/matrix/{{i}}/{{j}}"
+  hx-trigger="mouseenter once"
   data-position="{{i}}-{{j}}"
   hx-swap="outerHTML"
+  style="animation: flipAnimation 2s cubic-bezier(0.4, 0, 0.2, 1)"
 ></span>

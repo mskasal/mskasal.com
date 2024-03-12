@@ -1,0 +1,12 @@
+<div id="matrix" class="matrix">{% include "grid.html" %}</div>
+<div class="panel" id="control-panel" style="position: absolute; bottom: 30px">
+  <input
+    type="number"
+    name="size"
+    value="{{size}}"
+    hx-get="/matrix/size"
+    hx-target="#matrix"
+    ht-trigger="onchange"
+    ht-swap="innerHTML"
+  />
+</div>

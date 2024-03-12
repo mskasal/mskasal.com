@@ -21,24 +21,10 @@
         aspect-ratio: 1;
         cursor: pointer;
       }
-      .htmx-request {
-        opacity: .5;
-        transition: opacity 1300ms linear;
-      }
     </style>
   </head>
   <body>
-    <div id="matrix" class="matrix">
-      {% for i in 0..size %} {% for j in 0..size %} {% include
-      "dyn_item_idle.html" %} {% endfor %} {% endfor %}
-    </div>
-    <div
-      class="panel"
-      id="control-panel"
-      style="position: absolute; bottom: 30px"
-    >
-      <input type="number" name="size" value="{{size}}" />
-    </div>
+    {% include "matrix.html" %}
     <script defer src="/assets/htmx.min.js"></script>
   </body>
 </html>
