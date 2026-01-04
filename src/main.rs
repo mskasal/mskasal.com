@@ -4,7 +4,7 @@ use askama::Template;
 use axum::{
     extract::{ws::WebSocket, ConnectInfo, Path, Query, State, WebSocketUpgrade},
     response::IntoResponse,
-    routing::{get, post},
+    routing::get,
     Router,
 };
 use axum_extra::{headers, TypedHeader};

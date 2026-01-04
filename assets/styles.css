@@ -36,3 +36,13 @@ button:focus {
 .ocr {
   display: inline-block;
 }
+
+::selection {
+  color: white;
+  background: #ff0000;
+}
+
+::highlight(my-persistent) {
+  background-color: yellow;
+  color: black;
+}

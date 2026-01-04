@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <link rel="modulepreload" href="/assets/app.js">
+    <script type="module" src="/assets/app.js"></script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="mskasal personal website" />
@@ -11,7 +14,7 @@
 
   <body>
     {% include "nav.html" %}
-    <section class="personal-information">
+    <section class="personal-information" id="personalInformation">
       <h1>Mustafa Samed Kasal</h1>
       <small class="location">Berlin, Germany 10317</small>
       <small class="social">
