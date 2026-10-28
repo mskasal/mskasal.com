@@ -124,3 +124,28 @@ test("three_peers_converge", () => {
   assert.deepEqual(results[1], results[0]);
   assert.deepEqual(results[2], results[0]);
 });
+
+test("local_events_describe_the_change", () => {
+  const store = createStore();
+  const events = [];
+  store.subscribe((event) => events.push(event));
+  store.upsert(note(ID(1), 1));
+  store.remove(ID(1), 5);
+  assert.deepEqual(events, [
+    { source: "local", type: "upsert", note: note(ID(1), 1) },
+    { source: "local", type: "remove", id: ID(1), u: 5 },
+  ]);
+});
+
+test("local_remove_always_deletes", () => {
+  const store = createStore();
+  const future = Math.floor(Date.now() / 1000) + 100;
+  store.upsert(note(ID(1), future));
+  store.remove(ID(1));
+  assert.equal(store.get(ID(1)), undefined);
+  // and peers given the same removal agree
+  const peer = createStore();
+  peer.merge([note(ID(1), future)]);
+  peer.applyRemote({ type: "remove", id: ID(1), u: future });
+  assert.equal(peer.get(ID(1)), undefined);
+});

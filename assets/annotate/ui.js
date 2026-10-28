@@ -138,10 +138,10 @@ export function mountUI({ root, cv, store, save, onShare, onStartRoom, onLeaveRo
           u: Math.max(now(), (previous?.u ?? 0) + 1),
         };
         if (author) note.a = author;
-        if (await save(note)) {
-          getSelection().removeAllRanges();
-          closeEditor();
-        }
+        // The quote is captured; drop the old selection now, so a selection
+        // made while the link is being written isn't cleared afterwards.
+        getSelection().removeAllRanges();
+        if (await save(note)) closeEditor();
       },
     },
     quoteLine,

@@ -30,8 +30,9 @@ export function createStore() {
   const tombstones = new Map(); // id → u of the deletion
   const listeners = new Set();
 
-  const emit = (source) => {
-    for (const listener of listeners) listener({ source });
+  // Local events also say what changed, so it can be sent to peers.
+  const emit = (source, change = {}) => {
+    for (const listener of listeners) listener({ source, ...change });
   };
 
   // Applies one version of a note; returns whether anything changed.
@@ -68,12 +69,12 @@ export function createStore() {
       // A local edit always wins locally: it is the newest thing the user did.
       tombstones.delete(valid.id);
       live.set(valid.id, valid);
-      emit("local");
+      emit("local", { type: "upsert", note: valid });
       return true;
     },
-    remove(id, u = now()) {
+    remove(id, u = Math.max(now(), live.get(id)?.u ?? 0)) {
       erase(id, u);
-      emit("local");
+      emit("local", { type: "remove", id, u });
     },
     merge(notes) {
       let changed = false;
