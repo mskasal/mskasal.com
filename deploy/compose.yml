@@ -12,6 +12,7 @@ services:
       - "80:80"
       - "443:443"
       - "443:443/udp"
+      - "${STATUS_BIND:-127.0.0.1}:8090:8090"
     environment:
       PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN in .env}
       ADMIN_DOMAIN: ${ADMIN_DOMAIN:?Set ADMIN_DOMAIN in .env}
@@ -20,8 +21,10 @@ services:
       ACME_EMAIL: ${ACME_EMAIL:-}
       RESUME: ${RESUME:-on}
       SITE: ${SITE:-on}
+      STATUS_TOKEN: ${STATUS_TOKEN:-}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./status:/srv/status:ro
       - caddy-data:/data
       - caddy-config:/config
 
