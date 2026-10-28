@@ -24,6 +24,10 @@
 {$CADDY_SCHEME}{$PUBLIC_DOMAIN} {
 	import tls_{$TLS_MODE}
 	encode zstd gzip
+	# Kill switch: RESUME=off in .env takes the résumé (/) offline, sending
+	# visitors to /experiments. 302 so nobody caches it.
+	@resume_off expression `{env.RESUME} == "off" && {path} == "/"`
+	redir @resume_off /experiments 302
 	reverse_proxy site:8080
 }
 

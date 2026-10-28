@@ -103,6 +103,8 @@ To try it on a laptop without a domain: `TLS_MODE=internal`,
 
 - **Upgrade Dossier:** change `DOSSIER_VERSION`, then `docker compose pull && docker compose up -d`.
 - **Update the site:** `git pull && docker compose up -d --build site`.
+- **Take the résumé offline:** `RESUME=off` in `.env`, then `docker compose up -d caddy`
+  (`/` redirects to `/experiments`; set it back to `on` the same way).
 - **Backups:** Dossier keeps nightly backups in its `dossier-data` volume. For a full copy
   you can move elsewhere, `./scripts/backup.sh` writes the database and `/data` to
   `backups/<timestamp>/`; `./scripts/restore.sh backups/<timestamp>` puts them back.
