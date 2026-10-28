@@ -1,21 +1,20 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <link rel="modulepreload" href="/assets/app.js">
-    <script type="module" src="/assets/app.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="mskasal personal website" />
     {% include "head.html" %}
     <title>Résumé</title>
   </head>
-  <body role="main">
+  <body>
     {% include "nav.html" %}
-    <section class="personal-information" id="personalInformation" role="contentinfo">
+    <main id="cv">
+    <section class="personal-information">
       <h1>Mustafa Samed Kasal</h1>
       <small class="location">Berlin, Germany</small>
       <small class="contact">
-        +491743663955 • mustafasamedkasal@gmail.com
+        mustafasamedkasal@gmail.com
       </small>
       <small class="social">
         <a target="_blank" href="https://x.com/mskasal">X (Twitter): @mskasal</a>
@@ -25,10 +24,6 @@
         <a target="_blank" href="https://www.linkedin.com/in/mskasal/">LinkedIn</a>
         •
         <a target="_blank" href="https://calendly.com/mskasal">Calendly</a>
-      </small>
-        •
-      <small class="download">
-        <a href="/assets/Samed Kasal - 2025 - Résumé.pdf" download>Download PDF Résumé</a>
       </small>
     </section>
     <section class="summary">
@@ -218,5 +213,6 @@
       </p>
       <small><i>Botego - US 62/105,085 · Filed Jan 19, 2015</i></small>
     </section>
+    </main>
   </body>
 </html>

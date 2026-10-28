@@ -42,7 +42,3 @@ button:focus {
   background: #ff0000;
 }
 
-::highlight(my-persistent) {
-  background-color: yellow;
-  color: black;
-}

@@ -18,3 +18,9 @@ tower-http = { version = "0.5.1", features = ["fs", "compression-br", "compressi
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 axum-extra = { version = "0.9.2", features = ["typed-header"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+
+[dev-dependencies]
+tokio-tungstenite = "0.21"
+reqwest = { version = "0.12", default-features = false }
+futures-util = "0.3"

@@ -1,0 +1,9 @@
+target
+.git
+.superpowers
+deploy
+docs
+tests
+node_modules
+*/pkg
+*/target
