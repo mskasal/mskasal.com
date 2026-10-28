@@ -99,7 +99,25 @@ To try it on a laptop without a domain: `TLS_MODE=internal`,
 `CHECK_RESOLVE=127.0.0.1 ./scripts/check.sh https://site.localhost https://admin.localhost --insecure`.
 (Google sign-in itself needs a real domain in the OAuth client.)
 
-## 6. Day to day
+## 6. Status for dashboards (optional)
+
+For an Apple TV app, Homebridge-style dashboards or Prometheus:
+
+```bash
+# .env: STATUS_BIND=<this machine's LAN IP>, optionally STATUS_TOKEN=<random>
+./scripts/install-status.sh        # runs scripts/status.py every 30 s
+docker compose up -d caddy
+curl http://<LAN IP>:8090/status   # add -H "Authorization: Bearer <token>" if set
+```
+
+`/status` is JSON: `overall` (`ok`, `degraded`: something unhealthy but the sites answer,
+`down`: a public health URL fails or the tunnel is disconnected), the site switches, public
+checks with latency, the tunnel, each service (state, health, uptime, restarts, memory and
+limit) and the host (temperature, load, memory, swap, disk, uptime, pending updates).
+`/metrics` has the same numbers for Prometheus. No secrets are in either. Keep
+`STATUS_BIND` a LAN address: it is never routed through Cloudflare.
+
+## 7. Day to day
 
 - **Upgrade Dossier:** change `DOSSIER_VERSION`, then `docker compose pull && docker compose up -d`.
 - **Update the site:** `git pull && docker compose up -d --build site`.

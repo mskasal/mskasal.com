@@ -49,3 +49,33 @@
 		header_up X-Forwarded-Uri {uri}
 	}
 }
+
+# Status for dashboards (an Apple TV app, Prometheus): scripts/status.py writes
+# the files, compose publishes the port on STATUS_BIND only (keep it a LAN
+# address). Open unless STATUS_TOKEN is set; then it wants "Bearer <token>".
+(status_files) {
+	root * /srv/status
+	header Cache-Control "no-store"
+	handle /status {
+		rewrite * /status.json
+		file_server
+	}
+	handle /metrics {
+		rewrite * /metrics.txt
+		file_server
+	}
+	respond 404
+}
+
+http://:8090 {
+	# {$STATUS_TOKEN} is filled in when Caddy loads this file (a hex token).
+	@open expression `"{$STATUS_TOKEN}" == ""`
+	@token header Authorization "Bearer {$STATUS_TOKEN}"
+	handle @open {
+		import status_files
+	}
+	handle @token {
+		import status_files
+	}
+	respond 401
+}

@@ -2,3 +2,4 @@
 .env.test
 emails.txt
 backups/
+status/

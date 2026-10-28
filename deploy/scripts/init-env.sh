@@ -9,6 +9,8 @@ cd "$(dirname "$0")/.."
 [ -f .env ] || cp .env.example .env
 # It holds every secret below.
 chmod 600 .env
+# Caddy mounts it; created here so Docker doesn't make it root-owned.
+mkdir -p status
 
 get() { grep -E "^$1=" .env | head -n1 | cut -d= -f2-; }
 set_value() {
