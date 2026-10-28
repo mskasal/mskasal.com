@@ -196,3 +196,118 @@ async fn rate_limit_drops_excess() {
     }
     assert!((25..=31).contains(&received), "received {received}");
 }
+
+/// Every message (presence included) that arrives within `wait`.
+async fn drain(socket: &mut Socket, wait: Duration) -> Vec<Value> {
+    let mut out = Vec::new();
+    let _ = timeout(wait, async {
+        while let Some(Ok(message)) = socket.next().await {
+            if let Message::Text(text) = message {
+                out.push(serde_json::from_str(&text).unwrap());
+            }
+        }
+    })
+    .await;
+    out
+}
+
+#[tokio::test]
+async fn hello_with_non_uuid_peer_is_ignored() {
+    let addr = common::spawn().await;
+    let room = Uuid::new_v4().to_string();
+    let mut a = join(addr, &room).await;
+    let mut b = join(addr, &room).await;
+    drain(&mut a, SHORT).await;
+    send(&mut a, json!({"type": "hello", "peer": "x".repeat(60_000)})).await;
+    let seen = drain(&mut b, SHORT).await;
+    assert!(seen.iter().all(|m| m["type"] != "hello"), "hello relayed");
+    assert!(
+        seen.iter().all(|m| !m.to_string().contains("xxxx")),
+        "long peer id broadcast"
+    );
+}
+
+#[tokio::test]
+async fn repeated_hello_does_not_rebroadcast_presence() {
+    let addr = common::spawn().await;
+    let room = Uuid::new_v4().to_string();
+    let mut a = join(addr, &room).await;
+    drain(&mut a, SHORT).await;
+    let hello = json!({"type": "hello", "peer": Uuid::new_v4().to_string(), "name": "Ada"});
+    send(&mut a, hello.clone()).await;
+    let first = drain(&mut a, SHORT).await;
+    assert_eq!(first.iter().filter(|m| m["type"] == "presence").count(), 1);
+    for _ in 0..5 {
+        send(&mut a, hello.clone()).await;
+    }
+    let repeats = drain(&mut a, SHORT).await;
+    assert_eq!(
+        repeats.iter().filter(|m| m["type"] == "presence").count(),
+        0
+    );
+}
+
+#[tokio::test]
+async fn stuck_reader_is_dropped() {
+    let addr = common::spawn().await;
+    let room = Uuid::new_v4().to_string();
+    let _stuck = join(addr, &room).await; // never reads
+    let mut watcher = join(addr, &room).await;
+    let mut senders = Vec::new();
+    for _ in 0..10 {
+        senders.push(join(addr, &room).await);
+    }
+    let big = json!({"type": "upsert", "peer": "p", "note": {"t": "x".repeat(60_000)}});
+    // Keep the stuck member's socket buffers full until the server gives up on it.
+    let flood = tokio::spawn(async move {
+        loop {
+            for s in senders.iter_mut() {
+                let _ = s.send(Message::Text(big.to_string())).await;
+            }
+            tokio::time::sleep(Duration::from_millis(40)).await;
+        }
+    });
+    let dropped = timeout(Duration::from_secs(30), async {
+        // Presence grows to 12 while everyone joins; a later, smaller count
+        // means the server disconnected a member that stopped reading.
+        let mut full = false;
+        loop {
+            match watcher.next().await {
+                Some(Ok(Message::Text(text))) => {
+                    let value: Value = serde_json::from_str(&text).unwrap();
+                    if value["type"] != "presence" {
+                        continue;
+                    }
+                    let count = value["peers"].as_array().unwrap().len();
+                    if count == 12 {
+                        full = true;
+                    } else if full && count < 12 {
+                        return true;
+                    }
+                }
+                Some(Ok(_)) => {}
+                _ => return false,
+            }
+        }
+    })
+    .await;
+    flood.abort();
+    assert_eq!(dropped, Ok(true), "stuck member was never disconnected");
+}
+
+#[tokio::test]
+async fn echo_socket_refuses_huge_messages() {
+    let addr = common::spawn().await;
+    let (mut socket, _) = connect_async(format!("ws://{addr}/ws")).await.unwrap();
+    socket
+        .send(Message::Text("x".repeat(200_000)))
+        .await
+        .unwrap();
+    let reply = timeout(Duration::from_secs(2), socket.next())
+        .await
+        .unwrap();
+    assert!(
+        !matches!(reply, Some(Ok(Message::Text(ref t))) if t.len() == 200_000),
+        "200 KB message was echoed"
+    );
+}

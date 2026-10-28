@@ -149,3 +149,32 @@ test("local_remove_always_deletes", () => {
   peer.applyRemote({ type: "remove", id: ID(1), u: future });
   assert.equal(peer.get(ID(1)), undefined);
 });
+
+test("local_edit_after_remote_delete_survives_on_peers", () => {
+  const future = Math.floor(Date.now() / 1000) + 100;
+  const a = createStore();
+  const b = createStore();
+  a.merge([note(ID(1), 1)]);
+  b.merge([note(ID(1), 1)]);
+  b.remove(ID(1), future); // B deletes, its clock ahead
+  a.applyRemote({ type: "remove", id: ID(1), u: future });
+  const sent = [];
+  a.subscribe((event) => event.source === "local" && sent.push(event));
+  a.upsert(note(ID(1), 2, { t: "re-added by A" })); // A saves with a stale u
+  b.applyRemote({ type: "upsert", note: sent[0].note });
+  assert.equal(a.get(ID(1))?.t, "re-added by A");
+  assert.deepEqual(b.toState(), a.toState());
+});
+
+test("local_edit_never_goes_back_in_time", () => {
+  const a = createStore();
+  a.merge([note(ID(1), 50, { t: "remote, newer" })]);
+  const sent = [];
+  a.subscribe((event) => event.source === "local" && sent.push(event));
+  a.upsert(note(ID(1), 10, { t: "local edit" }));
+  const b = createStore();
+  b.merge([note(ID(1), 50, { t: "remote, newer" })]);
+  b.applyRemote({ type: "upsert", note: sent[0].note });
+  assert.equal(a.get(ID(1)).t, "local edit");
+  assert.deepEqual(b.toState(), a.toState());
+});

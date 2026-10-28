@@ -64,6 +64,10 @@ jobs:
           docker compose config -q
           docker compose -f compose.yml -f compose.arm64.yml config -q
           COMPOSE_PROFILES=tunnel docker compose config -q
+      - name: Back-office guards (Caddy header handling, backup/restore)
+        run: |
+          deploy/tests/caddy-forwarded-uri.sh
+          deploy/tests/backup-restore.sh
       - name: Caddyfile is valid in every TLS mode
         working-directory: deploy
         run: |

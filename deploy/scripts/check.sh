@@ -43,6 +43,14 @@ else
   fail "admin / → $code ${location:-} (expected a redirect to Google sign-in)"
 fi
 
+# 2b. A spoofed X-Forwarded-Uri doesn't open the back office either.
+read -r code location <<<"$(curl "${curl_opts[@]}" -o /dev/null -w '%{http_code} %{redirect_url}' -H 'X-Forwarded-Uri: /api/health' "$admin/")"
+if [[ "$code" =~ ^(302|303|307|403)$ ]] && [[ "$code" = 403 || "$location" == *accounts.google.com* || "$location" == */oauth2/* ]]; then
+  ok "admin / with a spoofed X-Forwarded-Uri → $code (still guarded)"
+else
+  fail "admin / with X-Forwarded-Uri: /api/health → $code ${location:-} (sign-in bypassed)"
+fi
+
 # 3. The Claude connector's metadata is answered by Dossier, not the sign-in.
 read -r code location <<<"$(status_and_location "$admin/.well-known/oauth-protected-resource")"
 if [[ "$code" =~ ^(200|404)$ ]] && [[ "$location" != *accounts.google.com* ]]; then

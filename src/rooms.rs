@@ -19,7 +19,7 @@ use axum::{
 use futures_util::{SinkExt, StreamExt};
 use serde::Serialize;
 use serde_json::{json, Value};
-use tokio::sync::broadcast;
+use tokio::{sync::broadcast, time::timeout};
 use uuid::Uuid;
 
 pub const MAX_MEMBERS: usize = 16;
@@ -28,6 +28,9 @@ pub const MAX_MSGS_PER_SEC: u32 = 30;
 pub const MAX_FRAME: usize = 64 * 1024;
 pub const PING_EVERY: Duration = Duration::from_secs(30);
 pub const IDLE_TIMEOUT: Duration = Duration::from_secs(60);
+/// A member whose socket takes longer than this to accept a message has
+/// stopped reading and is disconnected.
+pub const SEND_TIMEOUT: Duration = Duration::from_secs(5);
 const PEER_COLOURS: usize = 8;
 const MAX_NAME: usize = 40;
 const CLOSE_TRY_AGAIN: u16 = 1013;
@@ -110,16 +113,22 @@ impl Rooms {
         }
     }
 
-    /// Records the peer id and name a connection introduced itself with.
-    fn hello(&self, id: Uuid, conn: Uuid, peer: &str, name: Option<&str>) {
+    /// Records the peer id and name a connection introduced itself with;
+    /// returns whether either changed.
+    fn hello(&self, id: Uuid, conn: Uuid, peer: Uuid, name: Option<&str>) -> bool {
         let mut rooms = self.0.lock().unwrap();
-        if let Some(member) = rooms
+        let Some(member) = rooms
             .get_mut(&id)
             .and_then(|room| room.members.iter_mut().find(|m| m.conn == conn))
-        {
-            member.peer = peer.to_string();
-            member.name = name.map(|n| n.chars().take(MAX_NAME).collect());
-        }
+        else {
+            return false;
+        };
+        let peer = peer.to_string();
+        let name: Option<String> = name.map(|n| n.chars().take(MAX_NAME).collect());
+        let changed = member.peer != peer || member.name != name;
+        member.peer = peer;
+        member.name = name;
+        changed
     }
 
     pub fn presence(&self, id: Uuid) -> Vec<PeerInfo> {
@@ -230,8 +239,11 @@ async fn serve(mut socket: WebSocket, id: Uuid, rooms: Rooms) {
                     }
                     let Some(value) = validate(&text) else { continue };
                     if value["type"] == "hello" {
-                        if let Some(peer) = value["peer"].as_str() {
-                            rooms.hello(id, conn, peer, value["name"].as_str());
+                        // Peer ids are UUIDs; anything else is not a client of ours.
+                        let Some(peer) = value["peer"].as_str().and_then(|p| Uuid::parse_str(p).ok()) else {
+                            continue;
+                        };
+                        if rooms.hello(id, conn, peer, value["name"].as_str()) {
                             rooms.announce(id, &tx);
                         }
                     }
@@ -243,7 +255,7 @@ async fn serve(mut socket: WebSocket, id: Uuid, rooms: Rooms) {
             },
             relayed = rx.recv() => match relayed {
                 Ok(relay) if relay.from != conn => {
-                    if sink.send(Message::Text(relay.text)).await.is_err() {
+                    if !matches!(timeout(SEND_TIMEOUT, sink.send(Message::Text(relay.text))).await, Ok(Ok(()))) {
                         break;
                     }
                 }
@@ -251,7 +263,9 @@ async fn serve(mut socket: WebSocket, id: Uuid, rooms: Rooms) {
                 Err(broadcast::error::RecvError::Closed) => break,
             },
             _ = ping.tick() => {
-                if last_heard.elapsed() > IDLE_TIMEOUT || sink.send(Message::Ping(Vec::new())).await.is_err() {
+                if last_heard.elapsed() > IDLE_TIMEOUT
+                    || !matches!(timeout(SEND_TIMEOUT, sink.send(Message::Ping(Vec::new()))).await, Ok(Ok(())))
+                {
                     break;
                 }
             }

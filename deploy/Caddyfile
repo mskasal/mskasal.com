@@ -30,5 +30,9 @@
 {$CADDY_SCHEME}{$ADMIN_DOMAIN} {
 	import tls_{$TLS_MODE}
 	encode zstd gzip
-	reverse_proxy oauth2-proxy:4180
+	reverse_proxy oauth2-proxy:4180 {
+		# oauth2-proxy matches its skip-auth routes against X-Forwarded-Uri:
+		# never let a client choose it, or "/api/health" would open everything.
+		header_up X-Forwarded-Uri {uri}
+	}
 }

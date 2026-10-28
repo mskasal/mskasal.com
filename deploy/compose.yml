@@ -27,6 +27,8 @@ services:
     build: ..
     image: mskasal-site:local
     restart: unless-stopped
+    # Bounds what live rooms can take from the host Dossier and Postgres share.
+    mem_limit: 256m
     healthcheck:
       # The runtime image has no curl; bash's /dev/tcp is enough.
       test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /healthz HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q ok <&3"]

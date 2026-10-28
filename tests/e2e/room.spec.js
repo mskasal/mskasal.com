@@ -106,3 +106,29 @@ test("offline_room_link_still_shows_notes", async ({ page }) => {
   await expect(page.locator(T("note-item"))).toContainText("still here");
   await expect(page.locator(T("room-status"))).toHaveText("Offline (notes still saved in link)");
 });
+
+test("clearing_many_notes_reaches_peers", async ({ page: a, browser }) => {
+  await a.goto("/healthz");
+  const payload = await a.evaluate(async () =>
+    (await import("/assets/annotate/codec.js")).encodeState({
+      v: 1,
+      notes: Array.from({ length: 40 }, (_, i) => ({
+        id: `n_${String(i).padStart(8, "0")}`,
+        q: { exact: "Rust", prefix: "", suffix: "" },
+        t: `note ${i}`,
+        c: i + 1,
+        u: i + 1,
+      })),
+    }),
+  );
+  await a.goto(`/#n=${payload}`);
+  await a.locator(T("start-room")).click();
+  await expect(a.locator(T("room-status"))).toHaveText("Live · 1 person");
+  const b = await newPage(browser);
+  await b.goto(a.url());
+  await expect(b.locator(T("note-item"))).toHaveCount(40);
+  a.on("dialog", (dialog) => dialog.accept());
+  await a.locator(T("clear-notes")).click();
+  await expect(a.locator(T("note-item"))).toHaveCount(0);
+  await expect(b.locator(T("note-item"))).toHaveCount(0, { timeout: 10_000 });
+});

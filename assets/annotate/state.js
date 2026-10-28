@@ -66,7 +66,9 @@ export function createStore() {
       const [valid] = clean([note]);
       if (!valid) return false;
       if (!live.has(valid.id) && live.size >= LIMITS.notes) return false;
-      // A local edit always wins locally: it is the newest thing the user did.
+      // A local edit is the newest thing the user did: make it newer than any
+      // version or deletion of this note we know of, so peers accept it too.
+      valid.u = Math.max(valid.u, (live.get(valid.id)?.u ?? -1) + 1, (tombstones.get(valid.id) ?? -1) + 1);
       tombstones.delete(valid.id);
       live.set(valid.id, valid);
       emit("local", { type: "upsert", note: valid });

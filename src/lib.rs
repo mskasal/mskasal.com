@@ -113,7 +113,7 @@ async fn blog_handler() -> BlogTemplate {
 async fn socket_handler(mut socket: WebSocket, who: SocketAddr) {
     while let Some(message) = socket.recv().await {
         let message = if let Ok(message) = message {
-            println!("Message received {who}...");
+            tracing::debug!("echo message from {who}");
             message
         } else {
             return;
@@ -135,8 +135,11 @@ async fn ws_handler(
     } else {
         String::from("Unknown browser")
     };
-    println!("`{user_agent}` at {addr} connected.");
-    ws.on_upgrade(move |socket| socket_handler(socket, addr))
+    tracing::debug!("`{user_agent}` at {addr} connected to the echo socket");
+    // Pong's messages are tiny; keep strangers from pushing large ones.
+    ws.max_message_size(rooms::MAX_FRAME)
+        .max_frame_size(rooms::MAX_FRAME)
+        .on_upgrade(move |socket| socket_handler(socket, addr))
 }
 
 async fn healthz_handler() -> &'static str {
