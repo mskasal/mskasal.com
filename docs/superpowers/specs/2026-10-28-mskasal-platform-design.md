@@ -135,7 +135,7 @@ secrets filled in and runs Dossier's `hash-password` for the password.
 `DOSSIER_AI_PROVIDER=anthropic` with an Anthropic API key and model
 (`.env.example` suggests `claude-sonnet-5-5`). Alternatively Dossier's Claude
 connector (Settings → Claude connector) lets Mustafa use it from claude.ai on
-his Claude plan; the stack supports both, the README explains both.
+their own Claude plan; the stack supports both, the README explains both.
 
 ### 4.5 Hosting targets
 
