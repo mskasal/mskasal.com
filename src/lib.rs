@@ -1,3 +1,5 @@
+pub mod rooms;
+
 use std::net::SocketAddr;
 
 use askama::Template;
@@ -144,6 +146,9 @@ async fn healthz_handler() -> &'static str {
 /// Builds the site's router with its state applied.
 pub fn router() -> Router {
     let state = AppState { size: 40 };
+    let room_routes = Router::new()
+        .route("/ws/room/:id", get(rooms::room_ws))
+        .with_state(rooms::Rooms::default());
     let comression_layer: CompressionLayer = CompressionLayer::new()
         .br(true)
         .gzip(true)
@@ -163,6 +168,7 @@ pub fn router() -> Router {
         .route("/ws", get(ws_handler))
         .route("/healthz", get(healthz_handler))
         .with_state(state)
+        .merge(room_routes)
         .nest_service("/favicon.ico", ServeFile::new("assets/favicon.ico"))
         .nest_service("/assets", ServeDir::new("assets"))
         .layer(comression_layer)

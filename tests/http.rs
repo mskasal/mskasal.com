@@ -3,7 +3,9 @@ mod common;
 #[tokio::test]
 async fn healthz_returns_ok() {
     let addr = common::spawn().await;
-    let res = reqwest::get(format!("http://{addr}/healthz")).await.unwrap();
+    let res = reqwest::get(format!("http://{addr}/healthz"))
+        .await
+        .unwrap();
     assert_eq!(res.status(), 200);
     assert_eq!(res.text().await.unwrap(), "ok");
 }
