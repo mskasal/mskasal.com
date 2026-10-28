@@ -62,6 +62,11 @@ cp .env.example .env        # then edit: PUBLIC_DOMAIN, ADMIN_DOMAIN, TLS_MODE, 
    service `http://caddy:80`.
 4. In `.env`: `TLS_MODE=tunnel`, `COMPOSE_PROFILES=tunnel`, `CLOUDFLARE_TUNNEL_TOKEN=<token>`,
    then run `./scripts/init-env.sh` again (it sets `CADDY_SCHEME=http://`).
+5. Also add `COMPOSE_FILE=compose.yml:compose.tunnel.yml` to `.env` (with `:compose.arm64.yml`
+   on arm64). It keeps Caddy's ports on 127.0.0.1, so nothing is reachable around the tunnel,
+   and plain `docker compose …` commands pick the right files.
+6. In Cloudflare, SSL/TLS → Edge Certificates → **Always Use HTTPS**: the tunnel otherwise
+   serves plain `http://` too.
 
 ### A VPS (AWS Lightsail/EC2, Hetzner, …)
 

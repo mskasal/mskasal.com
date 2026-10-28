@@ -67,7 +67,9 @@ code=$(curl "${curl_opts[@]}" -o /dev/null -w '%{http_code}' "$admin/api/health"
 if [ "${CHECK_SKIP_WS:-}" = 1 ]; then
   echo "skip  websocket rooms (CHECK_SKIP_WS=1)"
 else
-  room=$(cat /proc/sys/kernel/random/uuid)
+  # macOS has no /proc; uuidgen prints uppercase there.
+  room=$(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)
+  room=$(printf '%s' "$room" | tr 'A-F' 'a-f')
   code=$(curl "${curl_opts[@]}" --http1.1 --max-time 3 -o /dev/null -w '%{http_code}' \
     -H "Connection: Upgrade" -H "Upgrade: websocket" -H "Sec-WebSocket-Version: 13" \
     -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" "$public/ws/room/$room" || true)

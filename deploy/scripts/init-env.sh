@@ -41,8 +41,18 @@ echo "wrote emails.txt ($allowed)"
 
 if [ -z "$(get DOSSIER_PASSWORD)" ]; then
   if [ -t 0 ]; then
-    echo "Choose the Dossier password (asked twice):"
-    hash=$(docker run --rm -it "ghcr.io/aientech/dossier:$(get DOSSIER_VERSION)" hash-password | tr -d '\r' | grep -E '^argon2id:' | tail -n1)
+    # The published image is amd64-only; on arm64 use the one compose.arm64.yml builds.
+    image="ghcr.io/aientech/dossier:$(get DOSSIER_VERSION)"
+    if docker image inspect "dossier-local:$(get DOSSIER_VERSION)" >/dev/null 2>&1; then
+      image="dossier-local:$(get DOSSIER_VERSION)"
+    fi
+    # Asked here rather than by the container: a captured `docker run -it` hides
+    # its prompt and can miss the Enter key.
+    read -rsp "Dossier password: " pw; echo
+    read -rsp "Again: " pw2; echo
+    [ -n "$pw" ] && [ "$pw" = "$pw2" ] || { echo "Passwords are empty or don't match." >&2; exit 1; }
+    hash=$(printf '%s\n' "$pw" | docker run --rm -i "$image" hash-password | tr -d '\r' | grep -E '^argon2id:' | tail -n1)
+    unset pw pw2
     [ -n "$hash" ] || { echo "No hash came back from hash-password." >&2; exit 1; }
     set_value DOSSIER_PASSWORD "$hash"
     echo "set DOSSIER_PASSWORD"
