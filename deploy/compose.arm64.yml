@@ -1,0 +1,10 @@
+# arm64 hosts (Oracle Always Free, Raspberry Pi, AWS Graviton): Dossier's
+# published image is amd64-only, so build it from the pinned release.
+#
+#   docker compose -f compose.yml -f compose.arm64.yml up -d --build
+services:
+  dossier:
+    image: dossier-local:${DOSSIER_VERSION:-v1.9.2}
+    build:
+      context: https://github.com/AienTech/dossier.git#${DOSSIER_VERSION:-v1.9.2}
+      target: production
