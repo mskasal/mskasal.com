@@ -7,6 +7,7 @@ import { LIMITS, sanitizeState } from "./codec.js";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
 const now = () => Math.floor(Date.now() / 1000);
+const MAX_TOMBSTONES = 1000;
 
 /** A random note id: "n_" and 8 characters. */
 export function newNoteId() {
@@ -49,7 +50,11 @@ export function createStore() {
   }
 
   function erase(id, u) {
-    tombstones.set(id, Math.max(u, tombstones.get(id) ?? -Infinity));
+    const previous = tombstones.get(id);
+    tombstones.delete(id);
+    tombstones.set(id, Math.max(u, previous ?? -Infinity));
+    // Deletions also arrive from peers: keep the newest MAX_TOMBSTONES.
+    if (tombstones.size > MAX_TOMBSTONES) tombstones.delete(tombstones.keys().next().value);
     const current = live.get(id);
     if (current && current.u <= u) live.delete(id);
   }
@@ -83,10 +88,23 @@ export function createStore() {
       for (const note of clean(notes)) changed = apply(note) || changed;
       if (changed) emit("remote");
     },
-    /** A message from a peer: {type: "upsert", note} | {type: "remove", id, u} | {type: "state", notes}. */
+    /**
+     * A message from a peer: {type: "upsert", note} | {type: "remove", id, u}
+     * | {type: "state", notes, removed?: [{id, u}]}.
+     */
     applyRemote(message) {
       if (message?.type === "upsert") this.merge([message.note]);
-      else if (message?.type === "state" && Array.isArray(message.notes)) this.merge(message.notes);
+      else if (message?.type === "state" && Array.isArray(message.notes)) {
+        let changed = false;
+        for (const { id, u } of Array.isArray(message.removed) ? message.removed : []) {
+          if (typeof id !== "string" || !Number.isFinite(u)) continue;
+          const before = live.has(id);
+          erase(id, u);
+          changed = changed || before !== live.has(id);
+        }
+        if (changed) emit("remote");
+        this.merge(message.notes);
+      }
       else if (message?.type === "remove" && typeof message.id === "string" && Number.isFinite(message.u)) {
         const before = live.has(message.id);
         erase(message.id, message.u);
@@ -102,6 +120,10 @@ export function createStore() {
     },
     toState() {
       return { v: 1, notes: this.notes() };
+    },
+    /** What a peer needs to catch up: the notes and the deletions this session saw. */
+    toSync() {
+      return { notes: this.notes(), removed: [...tombstones].map(([id, u]) => ({ id, u })) };
     },
     subscribe(listener) {
       listeners.add(listener);

@@ -243,9 +243,12 @@ async fn serve(mut socket: WebSocket, id: Uuid, rooms: Rooms) {
                         let Some(peer) = value["peer"].as_str().and_then(|p| Uuid::parse_str(p).ok()) else {
                             continue;
                         };
-                        if rooms.hello(id, conn, peer, value["name"].as_str()) {
-                            rooms.announce(id, &tx);
+                        // An unchanged hello says nothing new; relaying it would
+                        // make every peer answer with its full state again.
+                        if !rooms.hello(id, conn, peer, value["name"].as_str()) {
+                            continue;
                         }
+                        rooms.announce(id, &tx);
                     }
                     let _ = tx.send(Relay { from: conn, text });
                 }
@@ -259,8 +262,10 @@ async fn serve(mut socket: WebSocket, id: Uuid, rooms: Rooms) {
                         break;
                     }
                 }
-                Ok(_) | Err(broadcast::error::RecvError::Lagged(_)) => {}
-                Err(broadcast::error::RecvError::Closed) => break,
+                Ok(_) => {}
+                // Missed messages can't be replayed: disconnect, and the client's
+                // reconnect exchanges full state with the room again.
+                Err(broadcast::error::RecvError::Lagged(_) | broadcast::error::RecvError::Closed) => break,
             },
             _ = ping.tick() => {
                 if last_heard.elapsed() > IDLE_TIMEOUT

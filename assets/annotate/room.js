@@ -7,6 +7,8 @@ const CLOSE_TRY_AGAIN = 1013;
 // every note, say) are queued and sent at most this fast.
 const BURST = 10;
 const PER_SECOND = 15;
+// Beyond this, the oldest queued messages are dropped; a reconnect resyncs.
+const MAX_QUEUE = 200;
 
 export function defaultUrl(roomId) {
   return `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/room/${roomId}`;
@@ -33,6 +35,7 @@ export function connectRoom({ roomId, peer, name, url = defaultUrl(roomId), onOp
   let tokens = BURST;
   let refilledAt = performance.now();
   let pumping = 0;
+  let lastReason;
 
   function pump() {
     pumping = 0;
@@ -49,13 +52,13 @@ export function connectRoom({ roomId, peer, name, url = defaultUrl(roomId), onOp
   function send(message) {
     if (socket?.readyState !== WebSocket.OPEN) return;
     queue.push(JSON.stringify({ ...message, peer }));
+    if (queue.length > MAX_QUEUE) queue.shift();
     if (!pumping) pump();
   }
 
   function connect() {
     socket = new WebSocket(url);
     socket.addEventListener("open", () => {
-      attempt = 0;
       everConnected = true;
       send({ type: "hello", ...(name ? { name } : {}) });
       onOpen();
@@ -68,6 +71,9 @@ export function connectRoom({ roomId, peer, name, url = defaultUrl(roomId), onOp
         return;
       }
       if (message?.type === "presence" && Array.isArray(message.peers)) {
+        // Joined for real: the server may still refuse after the socket opens.
+        attempt = 0;
+        lastReason = undefined;
         people = message.peers.length;
         onStatus("live", people);
       }
@@ -79,9 +85,12 @@ export function connectRoom({ roomId, peer, name, url = defaultUrl(roomId), onOp
       clearTimeout(pumping);
       pumping = 0;
       if (closed) return;
-      const reason = event.code === CLOSE_TRY_AGAIN ? event.reason : undefined;
-      onStatus(everConnected && !reason ? "reconnecting" : "offline", people, reason);
-      retry = setTimeout(connect, BACKOFF_MS[Math.min(attempt++, BACKOFF_MS.length - 1)]);
+      const reason = event.code === CLOSE_TRY_AGAIN ? event.reason || "room full" : undefined;
+      // A full room or busy server: say so once, and come back slowly.
+      onStatus(everConnected && !reason ? "reconnecting" : "offline", people, reason === lastReason ? undefined : reason);
+      lastReason = reason;
+      const wait = reason ? BACKOFF_MS.at(-1) : BACKOFF_MS[Math.min(attempt++, BACKOFF_MS.length - 1)];
+      retry = setTimeout(connect, wait);
     });
   }
 

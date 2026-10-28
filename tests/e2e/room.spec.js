@@ -132,3 +132,16 @@ test("clearing_many_notes_reaches_peers", async ({ page: a, browser }) => {
   await expect(a.locator(T("note-item"))).toHaveCount(0);
   await expect(b.locator(T("note-item"))).toHaveCount(0, { timeout: 10_000 });
 });
+
+test("full_room_does_not_hammer_the_server", async ({ page }) => {
+  let attempts = 0;
+  await page.routeWebSocket("**/ws/room/**", (ws) => {
+    attempts += 1;
+    ws.close({ code: 1013, reason: "room full" });
+  });
+  await page.goto("/#room=0f8fad5b-d9cb-469f-a165-70867728950e");
+  await expect(page.locator(T("message"))).toHaveText("This live session is full.");
+  await page.waitForTimeout(4000);
+  expect(attempts).toBeLessThanOrEqual(2);
+  await expect(page.locator(T("room-status"))).toHaveText("Offline (notes still saved in link)");
+});

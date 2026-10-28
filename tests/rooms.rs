@@ -311,3 +311,20 @@ async fn echo_socket_refuses_huge_messages() {
         "200 KB message was echoed"
     );
 }
+
+#[tokio::test]
+async fn repeated_hello_is_not_relayed() {
+    let addr = common::spawn().await;
+    let room = Uuid::new_v4().to_string();
+    let mut a = join(addr, &room).await;
+    let mut b = join(addr, &room).await;
+    let hello = json!({"type": "hello", "peer": Uuid::new_v4().to_string()});
+    send(&mut a, hello.clone()).await;
+    let first = drain(&mut b, SHORT).await;
+    assert_eq!(first.iter().filter(|m| m["type"] == "hello").count(), 1);
+    for _ in 0..10 {
+        send(&mut a, hello.clone()).await;
+    }
+    let repeats = drain(&mut b, SHORT).await;
+    assert_eq!(repeats.iter().filter(|m| m["type"] == "hello").count(), 0);
+}

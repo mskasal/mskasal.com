@@ -57,7 +57,7 @@ services:
       OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "true"
       # The Claude connector brings its own OAuth token, which Dossier checks;
       # the health check is public.
-      OAUTH2_PROXY_SKIP_AUTH_ROUTES: ^/api/mcp,^/api/oauth,^/\.well-known/oauth-,^/api/health$$
+      OAUTH2_PROXY_SKIP_AUTH_ROUTES: ^/api/(mcp|oauth)(/|$$),^/\.well-known/oauth-(authorization-server|protected-resource)(/|$$),^/api/health$$
     volumes:
       - ./emails.txt:/etc/oauth2-proxy/emails.txt:ro
 

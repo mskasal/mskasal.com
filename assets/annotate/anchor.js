@@ -77,13 +77,16 @@ function agreeAfter(text, at, suffix) {
   return n;
 }
 
-/** The range a quote points at in `root` now, or null when its text is gone. */
-export function resolve(quote, root) {
+/**
+ * The range a quote points at in `root` now, or null when its text is gone.
+ * Pass `index` (from textIndex) when resolving many quotes against one root.
+ */
+export function resolve(quote, root, index = null) {
   const exact = normalize(quote?.exact);
   if (!exact) return null;
   const prefix = normalize(quote.prefix);
   const suffix = normalize(quote.suffix);
-  const { text, positions } = textIndex(root);
+  const { text, positions } = index ?? textIndex(root);
 
   let best = -1;
   let bestScore = -1;

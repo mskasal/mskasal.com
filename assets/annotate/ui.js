@@ -22,7 +22,8 @@ function el(tag, attributes = {}, ...children) {
   return node;
 }
 
-function rememberedName() {
+/** The name this visitor last signed a note with, or "". */
+export function rememberedName() {
   try {
     return localStorage.getItem(NAME_KEY) ?? "";
   } catch {

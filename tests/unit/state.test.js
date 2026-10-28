@@ -178,3 +178,26 @@ test("local_edit_never_goes_back_in_time", () => {
   assert.equal(a.get(ID(1)).t, "local edit");
   assert.deepEqual(b.toState(), a.toState());
 });
+
+test("sync_state_carries_deletions", () => {
+  const a = createStore();
+  const b = createStore();
+  a.merge([note(ID(1), 1), note(ID(2), 1)]);
+  b.merge([note(ID(1), 1), note(ID(2), 1)]);
+  a.remove(ID(1), 5); // B misses this message
+  b.applyRemote({ type: "state", ...a.toSync() });
+  assert.equal(b.get(ID(1)), undefined);
+  assert.deepEqual(b.toState(), a.toState());
+  // and B's stale copy can't bring it back to a newcomer who also hears A
+  const c = createStore();
+  c.applyRemote({ type: "state", ...a.toSync() });
+  c.applyRemote({ type: "state", notes: [note(ID(1), 1)] });
+  assert.equal(c.get(ID(1)), undefined);
+});
+
+test("tombstones_are_bounded", () => {
+  const store = createStore();
+  const removed = Array.from({ length: 5000 }, (_, i) => ({ id: ID(i), u: 1 }));
+  store.applyRemote({ type: "state", notes: [], removed });
+  assert.ok(store.toSync().removed.length <= 1000);
+});

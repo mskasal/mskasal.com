@@ -77,3 +77,10 @@ jobs:
               -e ADMIN_DOMAIN=b.example.com -e ACME_EMAIL=ci@example.com \
               -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2.10.2 caddy validate --config /etc/caddy/Caddyfile
           done
+
+  stack:
+    # The whole deploy stack with real images, checked from the outside.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: deploy/tests/stack.sh
