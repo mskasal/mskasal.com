@@ -105,6 +105,12 @@ To try it on a laptop without a domain: `TLS_MODE=internal`,
 
 ## Troubleshooting
 
+- **Building behind a corporate or TLS-inspecting proxy:** pass its CA bundle as a
+  build secret, which the site's Dockerfile installs in the build stage only:
+  `docker build --secret id=extra_ca,src=/path/to/ca.pem ..` (with `--build-arg HTTPS_PROXY=…`
+  if the proxy is needed too). Where apt is blocked, the WASM experiments are built without
+  `wasm-opt`; they still work, just a little larger.
+
 - **`check.sh` says admin `/` → 502:** oauth2-proxy or Dossier isn't up: `docker compose ps`,
   then `docker compose logs oauth2-proxy dossier`.
 - **Google says `redirect_uri_mismatch`:** the OAuth client's redirect URI must be exactly
