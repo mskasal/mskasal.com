@@ -36,3 +36,9 @@ button:focus {
 .ocr {
   display: inline-block;
 }
+
+::selection {
+  color: white;
+  background: #ff0000;
+}
+

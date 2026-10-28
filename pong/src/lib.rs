@@ -418,7 +418,7 @@ pub fn pong_game() -> Result<(), JsValue> {
     };
 
     let game = Rc::new(RefCell::new(PongGame::new(constraints)));
-    let socket = Rc::new(RefCell::new(WebSocket::new("ws://0.0.0.0:8080/ws")?));
+    let socket = Rc::new(RefCell::new(WebSocket::new(&ws_url()?)?));
 
     let game_keydown = Rc::clone(&game);
     let game_socket = Rc::clone(&game);
@@ -514,4 +514,17 @@ pub fn pong_game() -> Result<(), JsValue> {
     }
 
     Ok(())
+}
+
+/// The echo socket on the host that served the page (`wss:` on HTTPS).
+fn ws_url() -> Result<String, JsValue> {
+    let location = web_sys::window()
+        .ok_or_else(|| JsValue::from_str("no window"))?
+        .location();
+    let scheme = if location.protocol()? == "https:" {
+        "wss"
+    } else {
+        "ws"
+    };
+    Ok(format!("{scheme}://{}/ws", location.host()?))
 }

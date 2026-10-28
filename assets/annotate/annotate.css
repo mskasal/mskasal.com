@@ -1,0 +1,265 @@
+:root {
+  --annotate-surface: #fffdf6;
+  --annotate-border: #d9d3c3;
+  --annotate-text: #333;
+  --annotate-muted: #6b6457;
+  --annotate-accent: #2b90d7;
+  --annotate-danger: #c0392b;
+  --annotate-note: #ffe27a;
+  --annotate-active: #ffb347;
+  --annotate-panel-width: 300px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --annotate-surface: #24221e;
+    --annotate-border: #4a463d;
+    --annotate-text: #ece6d6;
+    --annotate-muted: #b3ab98;
+    --annotate-note: #7a6315;
+    --annotate-active: #9a5a10;
+  }
+}
+
+::highlight(notes) {
+  background-color: var(--annotate-note);
+}
+::highlight(notes-active) {
+  background-color: var(--annotate-active);
+}
+::highlight(peer-0) { background-color: #ffe27a; }
+::highlight(peer-1) { background-color: #a8e6a1; }
+::highlight(peer-2) { background-color: #a9d4ff; }
+::highlight(peer-3) { background-color: #ffb3c7; }
+::highlight(peer-4) { background-color: #d5b8ff; }
+::highlight(peer-5) { background-color: #ffcc99; }
+::highlight(peer-6) { background-color: #9fe7e0; }
+::highlight(peer-7) { background-color: #e0d38f; }
+
+#cv {
+  cursor: text;
+}
+
+.annotate-add {
+  position: absolute;
+  width: auto;
+  line-height: 1.3;
+  z-index: 20;
+  padding: 4px 10px;
+  border: 1px solid var(--annotate-accent);
+  border-radius: 999px;
+  background: var(--annotate-accent);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.15);
+}
+
+.annotate-editor {
+  position: fixed;
+  z-index: 30;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - 32px));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--annotate-border);
+  border-radius: 10px;
+  background: var(--annotate-surface);
+  color: var(--annotate-text);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.18);
+}
+.annotate-editor textarea,
+.annotate-editor input {
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--annotate-border);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  resize: vertical;
+}
+.annotate-quote {
+  margin: 0;
+  padding-left: 8px;
+  border-left: 3px solid var(--annotate-note);
+  color: var(--annotate-muted);
+  font-style: italic;
+  max-height: 4.5em;
+  overflow: hidden;
+}
+
+.annotate-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.annotate-row button,
+.annotate-toggle {
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.3;
+  width: auto;
+  margin: 0;
+  padding: 4px 10px;
+  border: 1px solid var(--annotate-border);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.annotate-primary {
+  background: var(--annotate-accent) !important;
+  border-color: var(--annotate-accent) !important;
+  color: #fff !important;
+}
+.annotate-danger {
+  color: var(--annotate-danger) !important;
+}
+[hidden] {
+  display: none !important;
+}
+
+.annotate-panel {
+  position: fixed;
+  z-index: 10;
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  width: var(--annotate-panel-width);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--annotate-border);
+  border-radius: 10px;
+  background: var(--annotate-surface);
+  color: var(--annotate-text);
+  font-size: 14px;
+  overflow: hidden;
+}
+.annotate-panel header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--annotate-border);
+}
+.annotate-toggle {
+  border: none;
+  padding: 0;
+  font-weight: 600;
+}
+.annotate-body {
+  overflow-y: auto;
+  padding: 10px 12px;
+}
+.annotate-collapsed .annotate-body {
+  display: none;
+}
+.annotate-collapsed {
+  bottom: auto;
+}
+.annotate-toolbar {
+  justify-content: flex-start;
+}
+.annotate-hint {
+  color: var(--annotate-muted);
+  font-size: 12px;
+}
+.annotate-status {
+  font-size: 12px;
+  color: var(--annotate-muted);
+}
+.annotate-status[data-state="live"] {
+  color: #2e8b57;
+}
+.annotate-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.annotate-item {
+  padding: 8px;
+  border: 1px solid var(--annotate-border);
+  border-radius: 8px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.annotate-item q {
+  display: block;
+  color: var(--annotate-muted);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.annotate-item p {
+  margin: 4px 0 0;
+}
+.annotate-item small {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 500;
+  color: var(--annotate-muted);
+}
+.annotate-orphan {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--annotate-danger);
+}
+.annotate-message {
+  position: fixed;
+  z-index: 40;
+  left: 50%;
+  top: 16px;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  color: var(--annotate-text);
+  background: var(--annotate-surface);
+  border-radius: 8px;
+}
+.annotate-message:not(:empty) {
+  padding: 8px 14px;
+  border: 1px solid var(--annotate-border);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.12);
+}
+
+/* Wide screens: the CV makes room for the panel. */
+@media (min-width: 900px) {
+  body {
+    padding-right: calc(var(--annotate-panel-width) + 40px);
+  }
+}
+
+/* Phones and narrow windows: the panel is a bottom sheet. */
+@media (max-width: 899px) {
+  .annotate-panel {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 45vh;
+    border-radius: 12px 12px 0 0;
+  }
+  .annotate-editor {
+    bottom: calc(45vh + 8px);
+  }
+  body {
+    padding-bottom: 45vh;
+  }
+}

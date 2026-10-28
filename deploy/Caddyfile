@@ -1,0 +1,38 @@
+# TLS_MODE picks one of the snippets below:
+#   acme      Let's Encrypt certificates (a public server)
+#   internal  Caddy's own CA (testing without a public domain)
+#   tunnel    plain HTTP behind Cloudflare Tunnel, which terminates TLS
+{
+	# cloudflared reaches Caddy from the Docker network; keep the
+	# X-Forwarded-Proto it sends (https) instead of overwriting it.
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+(tls_acme) {
+	tls {$ACME_EMAIL}
+}
+
+(tls_internal) {
+	tls internal
+}
+
+(tls_tunnel) {
+}
+
+{$CADDY_SCHEME}{$PUBLIC_DOMAIN} {
+	import tls_{$TLS_MODE}
+	encode zstd gzip
+	reverse_proxy site:8080
+}
+
+{$CADDY_SCHEME}{$ADMIN_DOMAIN} {
+	import tls_{$TLS_MODE}
+	encode zstd gzip
+	reverse_proxy oauth2-proxy:4180 {
+		# oauth2-proxy matches its skip-auth routes against X-Forwarded-Uri:
+		# never let a client choose it, or "/api/health" would open everything.
+		header_up X-Forwarded-Uri {uri}
+	}
+}

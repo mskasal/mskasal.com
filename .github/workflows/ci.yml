@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+
+  js:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:unit
+      - run: npx playwright install --with-deps chromium
+      # Build first so Playwright's web server starts within its timeout.
+      - run: cargo build --bin mskasal
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: test-results/
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t mskasal-site .
+      - name: Validate the deploy stack
+        working-directory: deploy
+        run: |
+          cp .env.example .env
+          sed -i \
+            -e 's|^ADMIN_DOMAIN=.*|ADMIN_DOMAIN=admin.example.com|' \
+            -e 's|^OAUTH2_PROXY_CLIENT_ID=.*|OAUTH2_PROXY_CLIENT_ID=ci|' \
+            -e 's|^OAUTH2_PROXY_CLIENT_SECRET=.*|OAUTH2_PROXY_CLIENT_SECRET=ci|' \
+            -e 's|^ACME_EMAIL=.*|ACME_EMAIL=ci@example.com|' \
+            .env
+          ./scripts/init-env.sh < /dev/null
+          sed -i 's|^DOSSIER_PASSWORD=.*|DOSSIER_PASSWORD=argon2id:m=19456,t=2,p=1:AAAAAAAAAAAAAAAAAAAAAA:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA|' .env
+          docker compose config -q
+          docker compose -f compose.yml -f compose.arm64.yml config -q
+          COMPOSE_PROFILES=tunnel docker compose config -q
+      - name: Back-office guards (Caddy header handling, backup/restore)
+        run: |
+          deploy/tests/caddy-forwarded-uri.sh
+          deploy/tests/backup-restore.sh
+      - name: Caddyfile is valid in every TLS mode
+        working-directory: deploy
+        run: |
+          for mode in acme internal tunnel; do
+            scheme=https://; [ "$mode" = tunnel ] && scheme=http://
+            docker run --rm -e TLS_MODE=$mode -e CADDY_SCHEME=$scheme -e PUBLIC_DOMAIN=a.example.com \
+              -e ADMIN_DOMAIN=b.example.com -e ACME_EMAIL=ci@example.com \
+              -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2.10.2 caddy validate --config /etc/caddy/Caddyfile
+          done
+
+  stack:
+    # The whole deploy stack with real images, checked from the outside.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: deploy/tests/stack.sh

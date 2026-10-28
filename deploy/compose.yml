@@ -1,0 +1,125 @@
+# mskasal.com: the public site and the Dossier back office behind one Caddy.
+# Set up with scripts/init-env.sh, then `docker compose up -d`. See README.md.
+
+name: mskasal
+
+services:
+  caddy:
+    image: caddy:2.10.2
+    restart: unless-stopped
+    depends_on: [site, oauth2-proxy]
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN in .env}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN:?Set ADMIN_DOMAIN in .env}
+      TLS_MODE: ${TLS_MODE:-acme}
+      CADDY_SCHEME: ${CADDY_SCHEME:-https://}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+  site:
+    build: ..
+    image: mskasal-site:local
+    restart: unless-stopped
+    # Bounds what live rooms can take from the host Dossier and Postgres share.
+    mem_limit: 256m
+    healthcheck:
+      # The runtime image has no curl; bash's /dev/tcp is enough.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /healthz HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q ok <&3"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.12.0
+    restart: unless-stopped
+    depends_on: [dossier]
+    environment:
+      OAUTH2_PROXY_PROVIDER: google
+      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_PROXY_CLIENT_ID:?Set OAUTH2_PROXY_CLIENT_ID in .env}
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_PROXY_CLIENT_SECRET:?Set OAUTH2_PROXY_CLIENT_SECRET in .env}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET:?Set OAUTH2_PROXY_COOKIE_SECRET in .env}
+      OAUTH2_PROXY_COOKIE_SECURE: "true"
+      OAUTH2_PROXY_COOKIE_DOMAINS: ${ADMIN_DOMAIN}
+      OAUTH2_PROXY_REDIRECT_URL: https://${ADMIN_DOMAIN}/oauth2/callback
+      OAUTH2_PROXY_HTTP_ADDRESS: 0.0.0.0:4180
+      OAUTH2_PROXY_UPSTREAMS: http://dossier:3000
+      OAUTH2_PROXY_REVERSE_PROXY: "true"
+      # Only the addresses in emails.txt get in: no email domain is allowed
+      # wholesale.
+      OAUTH2_PROXY_AUTHENTICATED_EMAILS_FILE: /etc/oauth2-proxy/emails.txt
+      OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "true"
+      # The Claude connector brings its own OAuth token, which Dossier checks;
+      # the health check is public.
+      OAUTH2_PROXY_SKIP_AUTH_ROUTES: ^/api/(mcp|oauth)(/|$$),^/\.well-known/oauth-(authorization-server|protected-resource)(/|$$),^/api/health$$
+    volumes:
+      - ./emails.txt:/etc/oauth2-proxy/emails.txt:ro
+
+  dossier:
+    image: ghcr.io/aientech/dossier:${DOSSIER_VERSION:-v1.9.2}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://dossier:${POSTGRES_PASSWORD}@db:5432/dossier
+      DOSSIER_PASSWORD: ${DOSSIER_PASSWORD:?Set DOSSIER_PASSWORD in .env (scripts/init-env.sh)}
+      DOSSIER_SECRET: ${DOSSIER_SECRET:?Set DOSSIER_SECRET in .env}
+      DOSSIER_PUBLIC_URL: https://${ADMIN_DOMAIN}
+      TZ: ${TZ:-Europe/Berlin}
+      DOSSIER_BACKUP_RETENTION_DAYS: ${DOSSIER_BACKUP_RETENTION_DAYS:-}
+      DOSSIER_TELEMETRY: ${DOSSIER_TELEMETRY:-off}
+      DOSSIER_AI_PROVIDER: ${DOSSIER_AI_PROVIDER:-anthropic}
+      DOSSIER_AI_URL: ${DOSSIER_AI_URL:-}
+      DOSSIER_AI_MODEL: ${DOSSIER_AI_MODEL:-claude-sonnet-5-5}
+      DOSSIER_AI_KEY: ${DOSSIER_AI_KEY:-}
+      DOSSIER_AI_TIMEOUT_SECONDS: ${DOSSIER_AI_TIMEOUT_SECONDS:-}
+      DOSSIER_JOBS_SOURCE: ${DOSSIER_JOBS_SOURCE:-}
+      DOSSIER_JSEARCH_KEY: ${DOSSIER_JSEARCH_KEY:-}
+      DOSSIER_JSEARCH_HOST: ${DOSSIER_JSEARCH_HOST:-}
+      DOSSIER_ADZUNA_APP_ID: ${DOSSIER_ADZUNA_APP_ID:-}
+      DOSSIER_ADZUNA_KEY: ${DOSSIER_ADZUNA_KEY:-}
+      DOSSIER_GOOGLE_CLIENT_ID: ${DOSSIER_GOOGLE_CLIENT_ID:-}
+      DOSSIER_GOOGLE_CLIENT_SECRET: ${DOSSIER_GOOGLE_CLIENT_SECRET:-}
+    volumes:
+      - dossier-data:/data
+    # Room for Chromium, which prints the PDFs.
+    mem_limit: 1g
+
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dossier
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: dossier
+    volumes:
+      # Postgres 18+ keeps data in a versioned subdirectory, so mount the parent.
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dossier -d dossier"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Home hosting without a public IP: COMPOSE_PROFILES=tunnel and TLS_MODE=tunnel.
+  cloudflared:
+    image: cloudflare/cloudflared:2025.10.0
+    profiles: [tunnel]
+    restart: unless-stopped
+    depends_on: [caddy]
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+
+volumes:
+  caddy-data:
+  caddy-config:
+  dossier-data:
+  pgdata:
