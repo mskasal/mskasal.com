@@ -18,6 +18,8 @@ services:
       TLS_MODE: ${TLS_MODE:-acme}
       CADDY_SCHEME: ${CADDY_SCHEME:-https://}
       ACME_EMAIL: ${ACME_EMAIL:-}
+      RESUME: ${RESUME:-on}
+      SITE: ${SITE:-on}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data

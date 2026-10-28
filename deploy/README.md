@@ -62,6 +62,11 @@ cp .env.example .env        # then edit: PUBLIC_DOMAIN, ADMIN_DOMAIN, TLS_MODE, 
    service `http://caddy:80`.
 4. In `.env`: `TLS_MODE=tunnel`, `COMPOSE_PROFILES=tunnel`, `CLOUDFLARE_TUNNEL_TOKEN=<token>`,
    then run `./scripts/init-env.sh` again (it sets `CADDY_SCHEME=http://`).
+5. Also add `COMPOSE_FILE=compose.yml:compose.tunnel.yml` to `.env` (with `:compose.arm64.yml`
+   on arm64). It keeps Caddy's ports on 127.0.0.1, so nothing is reachable around the tunnel,
+   and plain `docker compose …` commands pick the right files.
+6. In Cloudflare, SSL/TLS → Edge Certificates → **Always Use HTTPS**: the tunnel otherwise
+   serves plain `http://` too.
 
 ### A VPS (AWS Lightsail/EC2, Hetzner, …)
 
@@ -98,6 +103,10 @@ To try it on a laptop without a domain: `TLS_MODE=internal`,
 
 - **Upgrade Dossier:** change `DOSSIER_VERSION`, then `docker compose pull && docker compose up -d`.
 - **Update the site:** `git pull && docker compose up -d --build site`.
+- **Take the site offline:** `SITE=soon` in `.env`, then `docker compose up -d caddy`. Every
+  public page answers "soon!" (503); the back office and `/healthz` stay up.
+  For only the résumé, `RESUME=off` instead (`/` redirects to `/experiments`). Set either
+  back to `on` the same way.
 - **Backups:** Dossier keeps nightly backups in its `dossier-data` volume. For a full copy
   you can move elsewhere, `./scripts/backup.sh` writes the database and `/data` to
   `backups/<timestamp>/`; `./scripts/restore.sh backups/<timestamp>` puts them back.

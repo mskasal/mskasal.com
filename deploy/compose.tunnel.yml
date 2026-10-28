@@ -1,0 +1,12 @@
+# Cloudflare Tunnel hosts: cloudflared reaches Caddy over the compose network,
+# so Caddy's ports only need to answer on the host itself (for check.sh with
+# CHECK_RESOLVE=127.0.0.1). Without this, 80/443 are open on every address,
+# public IPv6 included, and the site can be reached around Cloudflare.
+#
+#   docker compose -f compose.yml -f compose.tunnel.yml up -d
+services:
+  caddy:
+    ports: !override
+      - "127.0.0.1:80:80"
+      - "127.0.0.1:443:443"
+      - "127.0.0.1:443:443/udp"
