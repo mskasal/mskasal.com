@@ -147,15 +147,13 @@ def overall(public, tunnel_state, svc, h):
 
 
 def metrics(status):
-    lines = []
+    # Prometheus wants each family's samples together, after its HELP/TYPE.
+    families = {}
 
     def add(name, value, help_, labels=""):
         if value is None:
             return
-        if not any(l.startswith(f"# HELP {name} ") for l in lines):
-            lines.append(f"# HELP {name} {help_}")
-            lines.append(f"# TYPE {name} gauge")
-        lines.append(f"{name}{labels} {value}")
+        families.setdefault(name, (help_, []))[1].append(f"{name}{labels} {value}")
 
     add("mskasal_up", {"ok": 1, "degraded": 1, "down": 0}[status["overall"]], "1 unless the overall status is down")
     add("mskasal_degraded", int(status["overall"] == "degraded"), "1 when something is unhealthy but the sites answer")
@@ -180,6 +178,9 @@ def metrics(status):
     add("mskasal_host_disk_used_gb", h["disk_gb"]["used"], "Root disk in use")
     add("mskasal_host_uptime_s", h["uptime_s"], "Host uptime")
     add("mskasal_host_updates_pending", h["updates_pending"], "Packages with updates")
+    lines = []
+    for name, (help_, samples) in families.items():
+        lines += [f"# HELP {name} {help_}", f"# TYPE {name} gauge", *samples]
     return "\n".join(lines) + "\n"
 
 
