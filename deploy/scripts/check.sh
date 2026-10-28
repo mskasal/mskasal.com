@@ -63,9 +63,19 @@ fi
 code=$(curl "${curl_opts[@]}" -o /dev/null -w '%{http_code}' "$admin/api/health")
 [ "$code" = 200 ] && ok "admin /api/health → 200" || fail "admin /api/health → $code"
 
+# 4b. With SITE=soon the public site only answers "soon!", rooms included.
+soon=0
+body=$(curl "${curl_opts[@]}" "$public/" 2>/dev/null || true)
+if [[ "$body" == *"<body>soon!</body>"* ]]; then
+  soon=1
+  ok "public site / → soon! (SITE=soon)"
+fi
+
 # 5. WebSocket rooms upgrade through Caddy.
 if [ "${CHECK_SKIP_WS:-}" = 1 ]; then
   echo "skip  websocket rooms (CHECK_SKIP_WS=1)"
+elif [ "$soon" = 1 ]; then
+  echo "skip  websocket rooms (SITE=soon)"
 else
   # macOS has no /proc; uuidgen prints uppercase there.
   room=$(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)
