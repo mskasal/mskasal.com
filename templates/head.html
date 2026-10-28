@@ -5,7 +5,7 @@
     --text-color: #333;
     --background-color: #f6f6ef;
     --accent-color: #4e4137;
-    --system-font: system-ui, "Courier New", Courier, monospace;
+    --system-font: system-ui, 'Courier New', Courier, monospace;
   }
 
   body {
@@ -14,8 +14,9 @@
     background-color: var(--background-color);
     display: flex;
     flex-direction: column;
-    padding: 20px;
+    padding: 24px;
     line-height: 1.4rem;
+    scrollbar-gutter: stable;
   }
 
   nav {
@@ -30,7 +31,7 @@
   }
 
   section {
-    padding: 20px;
+    padding: 24px;
   }
 
   small {
@@ -88,7 +89,10 @@
   rel="preload"
   href="/assets/styles.css"
   as="style"
-  onload="this.onload=null;this.rel='stylesheet'"
+  onload="
+    this.onload = null;
+    this.rel = 'stylesheet';
+  "
 />
 <noscript><link rel="stylesheet" href="/assets/styles.css" /></noscript>
 <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />

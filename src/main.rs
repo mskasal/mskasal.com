@@ -4,7 +4,7 @@ use askama::Template;
 use axum::{
     extract::{ws::WebSocket, ConnectInfo, Path, Query, State, WebSocketUpgrade},
     response::IntoResponse,
-    routing::{get, post},
+    routing::get,
     Router,
 };
 use axum_extra::{headers, TypedHeader};
@@ -60,6 +60,10 @@ pub struct GridTemplate {
 #[template(path = "experiments.html")]
 pub struct ExperimentsTemplate {}
 
+#[derive(Template)]
+#[template(path = "blog.html")]
+pub struct BlogTemplate {}
+
 async fn index_handler() -> IndexTemplate {
     IndexTemplate {}
 }
@@ -99,6 +103,10 @@ async fn matrix_size_handler(
 
 async fn experiments_handler() -> ExperimentsTemplate {
     ExperimentsTemplate {}
+}
+
+async fn blog_handler() -> BlogTemplate {
+    BlogTemplate {}
 }
 
 async fn socket_handler(mut socket: WebSocket, who: SocketAddr) {
@@ -156,6 +164,7 @@ async fn main() {
         .route("/matrix/size", get(matrix_size_handler))
         .route("/matrix/:i/:j", get(matrix_state_handler))
         .route("/experiments", get(experiments_handler))
+        .route("/blog", get(blog_handler))
         .route("/ws", get(ws_handler))
         .with_state(state)
         .nest_service("/favicon.ico", ServeFile::new("assets/favicon.ico"))
